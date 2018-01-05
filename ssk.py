@@ -1,18 +1,15 @@
 import numpy as np
+import math as math
 
 def kPrimeN(sx,t,i):
-    if(i == 1):
+    if(i == 0):
         return 1
-    
-    global lambdaDecay
-    print sx
-
-    x = sx[-1]
-    s = sx[:-1]
-    
     if( min(len(sx),len(t)) < i):
         return 0
-
+    
+    global lambdaDecay
+    x = sx[-1]
+    s = sx[:-1]
 
     sumJ = 0
     for j in range(0,len(t)):
@@ -24,13 +21,12 @@ def kPrimeN(sx,t,i):
     
 
 def kN(sx,t,i):
+    if( min(len(sx),len(t)) < i):
+        return 0
+
     global lambdaDecay
     x = sx[-1]
     s = sx[:-1]
-    
-
-    if( min(len(sx),len(t)) < i):
-        return 0
 
     sumJ = 0
 
@@ -40,12 +36,16 @@ def kN(sx,t,i):
 
     return kN(s,t,i) + sumJ
 
-stringS = 'manga'
-stringT = 'Danska'
-
-
+stringS = 'car'
+stringT = 'cat'
 lambdaDecay = 0.5
+k = 2
 
-hi = kN(stringS,stringT,3)
-print(hi)
+notNormalized = kN(stringS,stringT,k)
+print(notNormalized)
+stringSKernel = kN(stringS,stringS,k)
+stringTKernel = kN(stringT,stringT,k)
+normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
+
+print(normalizedKernel)
 
