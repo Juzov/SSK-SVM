@@ -46,8 +46,8 @@ def kN(sx,t,i):
     return kN(s,t,i) + sumJ
 
 #NOTE: If it doesn't work install nltk and add line nltk.download("reuters")
-documentIDList = reuters.fileids()
-print (reuters.raw(documentIDList[0]))
+#documentIDList = reuters.fileids()
+#print (reuters.raw(documentIDList[0]))
 
 stringS = 'bra'
 stringT = 'bat'
