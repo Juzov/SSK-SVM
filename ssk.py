@@ -1,5 +1,7 @@
 import numpy as np
 import math as math
+import nltk as nltk
+from nltk.corpus import reuters
 
 def kPrimeN(sx,t,i):
     if(i == 0):
@@ -31,8 +33,16 @@ def kN(sx,t,i):
             sumJ += kPrimeN(s,t[:j],i - 1) * (lambdaDecay ** 2)
     return kN(s,t,i) + sumJ
 
-stringS = 'car'
-stringT = 'cat'
+#NOTE: If it doesn't work install nltk and add line nltk.download("reuters")
+#documentIDList = reuters.fileids()
+#print reuters.raw(documentIDList[0])
+
+stringS = 'bra'
+stringT = 'bat'
+stringS = stringS.lower()
+stringT = stringT.lower()
+
+
 lambdaDecay = 0.5
 k = 2
 
