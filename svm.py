@@ -4,6 +4,7 @@ import nltk as nltk
 from nltk.corpus import reuters
 import numpy as np
 import ssk
+import sys
 
 def ssk_kernel(X, Y):
 	#TODO
@@ -11,18 +12,20 @@ def ssk_kernel(X, Y):
 	print(X)
 	print(Y)
 
+sys.setrecursionlimit(10000)
+
 documents = reuters.fileids()
  
 train_docs_id = list(filter(lambda doc: doc.startswith("train"),
-                            documents))[:10]
+                            documents))
 test_docs_id = list(filter(lambda doc: doc.startswith("test"),
-                           documents))
+                       documents))
 
-train_docs_id = train_docs_id[:10]
-test_docs_id = test_docs_id[:10]
+train_docs_id = train_docs_id[:2]
+test_docs_id = test_docs_id[:2]
  
-train_docs = [reuters.raw(doc_id)[:10] for doc_id in train_docs_id]
-test_docs = [reuters.raw(doc_id)[:10] for doc_id in test_docs_id]
+train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
+test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
 
 train_labels = [reuters.categories(doc_id)
                                   for doc_id in train_docs_id]
