@@ -65,8 +65,14 @@ stringS = 'car'
 stringT = 'cat'
 stringS = stringS.lower()
 stringT = stringT.lower()
+k = 2
+lambdaDecay = 0.5
 
+start = timeit.timeit()
+normalized = kN(stringS,stringT,k)
+end = timeit.timeit()
 
+print("Elapsed time: ", end - start)
 
 # notNormalized = kN(stringS,stringT,k)
 # print(notNormalized)
