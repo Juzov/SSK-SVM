@@ -1,10 +1,22 @@
+import sys
 from sklearn import svm
 import sklearn.preprocessing as preprocessing
 import nltk as nltk
 from nltk.corpus import reuters
+from nltk.corpus import stopwords
 import numpy as np
+import re
 import ssk
 import sys
+
+def format_text(text):
+	#document = (reuters.raw(documentIDList[0]))
+	pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*')
+	text.lower()
+	textWihoutStopWords = pattern.sub('', text)
+	textWihoutSymbols = re.sub(r'[^a-zA-Z\d\s]','', textWihoutStopWords)
+	formattedText = re.sub(r"\s+", " ", textWihoutSymbols)
+	return formattedText
 
 def ssk_kernel(X, Y):
 	#TODO
@@ -24,8 +36,13 @@ test_docs_id = list(filter(lambda doc: doc.startswith("test"),
 train_docs_id = train_docs_id[:2]
 test_docs_id = test_docs_id[:2]
  
+<<<<<<< HEAD
 train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
 test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
+=======
+train_docs = [format_text(reuters.raw(doc_id)) for doc_id in train_docs_id]
+test_docs = [format_text(reuters.raw(doc_id)) for doc_id in test_docs_id]
+>>>>>>> master
 
 train_labels = [reuters.categories(doc_id)
                                   for doc_id in train_docs_id]
