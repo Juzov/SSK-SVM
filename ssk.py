@@ -3,6 +3,22 @@ import math as math
 import nltk as nltk
 from nltk.corpus import reuters
 
+def kPrimePrimeN(sx,t,i):
+    if(i == 0):
+        return 1
+    if( min(len(sx),len(t)) < i):
+        return 0
+
+    global lambdaDecay
+    x = sx[-1]
+    s = sx[:-1]
+    sumJ = 0
+
+    for j in range(0,len(t)):
+        if(t[j] == x):
+            sumJ += kPrimeN(s,t[:j],i - 1) * lambdaDecay ** (len(t) - j + 1)
+    return sumJ
+
 def kPrimeN(sx,t,i):
     if(i == 0):
         return 1
@@ -12,12 +28,8 @@ def kPrimeN(sx,t,i):
     global lambdaDecay
     x = sx[-1]
     s = sx[:-1]
-    sumJ = 0
 
-    for j in range(0,len(t)):
-        if(t[j] == x):
-            sumJ += kPrimeN(s,t[:j],i - 1) * lambdaDecay ** (len(t) - j + 1)
-    return lambdaDecay * kPrimeN(s,t,i) + sumJ
+    return lambdaDecay * kPrimeN(s,t,i) + kPrimePrimeN(sx,t,i)
 
 def kN(sx,t,i):
     if( min(len(sx),len(t)) < i):
@@ -35,7 +47,7 @@ def kN(sx,t,i):
 
 #NOTE: If it doesn't work install nltk and add line nltk.download("reuters")
 #documentIDList = reuters.fileids()
-#print reuters.raw(documentIDList[0])
+#print (reuters.raw(documentIDList[0]))
 
 stringS = 'bra'
 stringT = 'bat'
