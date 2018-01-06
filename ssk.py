@@ -69,10 +69,10 @@ stringT = stringT.lower()
 lambdaDecay = 0.5
 k = 2
 
-notNormalized = kN(stringS,stringT,k)
-print(notNormalized)
-stringSKernel = kN(stringS,stringS,k)
-stringTKernel = kN(stringT,stringT,k)
-normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
+# notNormalized = kN(stringS,stringT,k)
+# print(notNormalized)
+# stringSKernel = kN(stringS,stringS,k)
+# stringTKernel = kN(stringT,stringT,k)
+# normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
 
-print(normalizedKernel)
+# print(normalizedKernel)
