@@ -62,7 +62,7 @@ model.fit(gram, Y)
 test_gram = np.zeros((len(test_docs),len(train_docs)))
 for i in range(0, len(test_docs)):
 	for j in range(0, len(train_docs)):
-		test_gram[i][j] = ssk.kN(test_docs[i],train_docs[i], 4)
+		test_gram[i][j] = ssk.kN(test_docs[i],train_docs[j], 4)
 
 predicted = model.predict(test_gram)
 
