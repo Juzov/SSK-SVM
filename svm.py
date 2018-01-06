@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 import numpy as np
 import re
 import ssk
+import sys
 
 def format_text(text):
 	#document = (reuters.raw(documentIDList[0]))
@@ -28,13 +29,16 @@ sys.setrecursionlimit(10000)
 documents = reuters.fileids()
  
 train_docs_id = list(filter(lambda doc: doc.startswith("train"),
-                            documents))[:10]
+                            documents))
 test_docs_id = list(filter(lambda doc: doc.startswith("test"),
-                           documents))
+                       documents))
 
-train_docs_id = train_docs_id[:10]
-test_docs_id = test_docs_id[:10]
- 
+train_docs_id = train_docs_id[:2]
+test_docs_id = test_docs_id[:2]
+
+train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
+test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
+
 train_docs = [format_text(reuters.raw(doc_id)) for doc_id in train_docs_id]
 test_docs = [format_text(reuters.raw(doc_id)) for doc_id in test_docs_id]
 
