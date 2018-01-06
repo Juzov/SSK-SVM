@@ -2,6 +2,7 @@ import numpy as np
 import math as math
 import nltk as nltk
 from nltk.corpus import reuters
+import timeit
 
 def kPrimePrimeN(sx,tz,i):
 
@@ -35,7 +36,7 @@ def kPrimeN(sx,t,i):
         return 1
     if( min(len(sx),len(t)) < i):
         return 0
-    
+
     global lambdaDecay
     x = sx[-1]
     s = sx[:-1]
@@ -64,15 +65,19 @@ stringS = 'car'
 stringT = 'cat'
 stringS = stringS.lower()
 stringT = stringT.lower()
-
-
-lambdaDecay = 0.5
 k = 2
+lambdaDecay = 0.5
 
-notNormalized = kN(stringS,stringT,k)
-print(notNormalized)
-stringSKernel = kN(stringS,stringS,k)
-stringTKernel = kN(stringT,stringT,k)
-normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
+start = timeit.timeit()
+normalized = kN(stringS,stringT,k)
+end = timeit.timeit()
 
-print(normalizedKernel)
+print("Elapsed time: ", end - start)
+
+# notNormalized = kN(stringS,stringT,k)
+# print(notNormalized)
+# stringSKernel = kN(stringS,stringS,k)
+# stringTKernel = kN(stringT,stringT,k)
+# normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
+
+# print(normalizedKernel)
