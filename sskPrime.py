@@ -34,8 +34,8 @@ def kN(sx,t,i):
             sumJ += kPrimeN(s,t[:j],i - 1) * (lambdaDecay ** 2)
     return kN(s,t,i) + sumJ
 
-stringS = 'carasdausdhaisdhisdhaisdhasidhaisdhaiuhdiahdiahsdusa'
-stringT = 'cataisdhaiuhdiauhsdiaushashdihdaiuhshdaudahidhammmmm'
+stringS = 'car'
+stringT = 'cat'
 lambdaDecay = 0.5
 k = 2
 
@@ -45,9 +45,6 @@ notNormalized = kN(stringS,stringT,k)
 endPrime = timeit.timeit()
 print("Running time - ", endPrime - startPrime)
 
-print(notNormalized)
 stringSKernel = kN(stringS,stringS,k)
 stringTKernel = kN(stringT,stringT,k)
 normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
-
-print(normalizedKernel)
