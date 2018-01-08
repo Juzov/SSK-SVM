@@ -54,7 +54,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_test)):
 		with open(path_test+filename,'r') as email:
-			test_data[i] = email.read()[:200]
+			test_data[i] = email.read()
 		if("spmsgc" in filename):
 			test_labels[i] = 1
 		else:
@@ -62,7 +62,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_train)):
 		with open(path_train+filename,'r') as email:
-			train_data[i] = email.read()[:200]
+			train_data[i] = email.read()
 		if("spmsgc" in filename):
 			train_labels[i] = 1
 		else:
@@ -76,22 +76,22 @@ def ssk_kernel(X, Y):
 	print(X)
 	print(Y)
 
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(100000)
 k = 10
 
 #test_docs, train_docs, train_labels, test_labels = get_reuters()
 test_docs, train_docs, train_labels, test_labels = get_spam()
-test_docs = test_docs[:2]
-train_docs = train_docs[:2]
-test_labels = test_labels[:2]
-train_labels = train_labels[:2]
-
-print(test_docs)
+test_docs = test_docs[:10]
+train_docs = train_docs[:10]
+test_labels = test_labels[:10]
+train_labels = train_labels[:10]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 for i in range(0,len(train_docs)):
 	for j in range(i, len(train_docs)):
-		gram[i][j] = ssk.kN(train_docs[i],train_docs[j], k)
+		print(train_filenames[i])
+		print(train_filenames[j])
+		gram[i][j] = ssk.getSSK(train_docs[i],train_docs[j], k)
 		print("new ssk done")
 		gram[j][i] = gram[i][j]
 
@@ -113,7 +113,7 @@ model.fit(gram, Y)
 test_gram = np.zeros((len(test_docs),len(train_docs)))
 for i in range(0, len(test_docs)):
 	for j in range(0, len(train_docs)):
-		test_gram[i][j] = ssk.kN(test_docs[i],train_docs[j], k)
+		test_gram[i][j] = ssk.getSSK(test_docs[i],train_docs[j], k)
 
 #normalize
 for i in range(0,len(test_docs)):
