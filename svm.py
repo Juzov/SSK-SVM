@@ -21,7 +21,7 @@ def format_text(text):
 
 def get_reuters():
 	documents = reuters.fileids()
- 
+
 	train_docs_id = list(filter(lambda doc: doc.startswith("train"),
 	                            documents))
 	test_docs_id = list(filter(lambda doc: doc.startswith("test"),
@@ -89,8 +89,6 @@ train_labels = train_labels[:10]
 gram = np.zeros((len(train_docs),len(train_docs)))
 for i in range(0,len(train_docs)):
 	for j in range(i, len(train_docs)):
-		print(train_filenames[i])
-		print(train_filenames[j])
 		gram[i][j] = ssk.getSSK(train_docs[i],train_docs[j], k)
 		print("new ssk done")
 		gram[j][i] = gram[i][j]
