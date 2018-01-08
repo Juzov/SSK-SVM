@@ -21,7 +21,7 @@ def format_text(text):
 
 def get_reuters():
 	documents = reuters.fileids()
-
+ 
 	train_docs_id = list(filter(lambda doc: doc.startswith("train"),
 	                            documents))
 	test_docs_id = list(filter(lambda doc: doc.startswith("test"),
@@ -54,7 +54,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_test)):
 		with open(path_test+filename,'r') as email:
-			test_data[i] = email.read()
+			test_data[i] = format_text(email.read()[:450])
 		if("spmsgc" in filename):
 			test_labels[i] = 1
 		else:
@@ -62,7 +62,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_train)):
 		with open(path_train+filename,'r') as email:
-			train_data[i] = email.read()
+			train_data[i] = format_text(email.read()[:450])
 		if("spmsgc" in filename):
 			train_labels[i] = 1
 		else:
@@ -81,10 +81,10 @@ k = 10
 
 #test_docs, train_docs, train_labels, test_labels = get_reuters()
 test_docs, train_docs, train_labels, test_labels = get_spam()
-test_docs = test_docs[:10]
-train_docs = train_docs[:10]
-test_labels = test_labels[:10]
-train_labels = train_labels[:10]
+test_docs = test_docs[:5]+test_docs[697:]
+train_docs = train_docs[:5]+train_docs[697:]
+test_labels = test_labels[:5]+test_labels[697:]
+train_labels = train_labels[:5]+train_labels[697:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 for i in range(0,len(train_docs)):
@@ -125,6 +125,6 @@ le = preprocessing.LabelEncoder()
 le.fit(Y)
 Y = le.transform(Y)
 
-print(np.mean(predicted == Y))
+print(sum(predicted == Y)/len(Y))
 
 #model.predict()
