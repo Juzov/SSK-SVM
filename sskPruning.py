@@ -29,10 +29,10 @@ def kPrimePrimeN(sx,tz,i,m):
     sumJ = 0
 
     if(x == z):
-        #same last elements
+        # same last elements
         sumJ += lambdaDecay*(kPrimePrimeN(sx, t, i,m-1) + lambdaDecay*kPrimeN(s,t, i-1,m-2))
     elif(x != z):
-        #different last elements
+        # different last elements
         count = 0
         for ti in range(len(t)-1, -1, -1):
             count += 1
@@ -109,14 +109,14 @@ stringT = 'wisdom is organized life'
 # stringS = 'cat'
 # stringT = 'car'
 
-stringS = stringS.lower()
-stringT = stringT.lower()
+# stringS = stringS.lower()
+# stringT = stringT.lower()
 
-k = 2
+# k = 2
 lambdaDecay = 0.5
-m = 5
+# m = 3
 
-notNormalized = getSSK(stringS, stringT, k, m)
+# notNormalized = getSSK(stringS, stringT, k, m)
 
 
 # start = time.time()
@@ -128,8 +128,8 @@ notNormalized = getSSK(stringS, stringT, k, m)
 
 # notNormalized = kN(stringS,stringT,k)
 # print(notNormalized)
-stringSKernel = kN(stringS,stringS,k, 5)
-stringTKernel = kN(stringT,stringT,k, 5)
-normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
+# stringSKernel = kN(stringS,stringS,k, 5)
+# stringTKernel = kN(stringT,stringT,k, 5)
+# normalizedKernel = notNormalized / math.sqrt(stringSKernel * stringTKernel)
 
-print(normalizedKernel)
+# print(normalizedKernel)
