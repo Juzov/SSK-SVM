@@ -10,8 +10,8 @@ import math
 import re
 import ssk
 
+"Function for removing stopwords and symbols"
 def format_text(text):
-	#document = (reuters.raw(documentIDList[0]))
 	pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*')
 	text.lower()
 	textWihoutStopWords = pattern.sub('', text)
@@ -19,9 +19,10 @@ def format_text(text):
 	formattedText = re.sub(r"\s+", " ", textWihoutSymbols)
 	return formattedText
 
+"Get the reuters corpus"
 def get_reuters():
 	documents = reuters.fileids()
-
+ 
 	train_docs_id = list(filter(lambda doc: doc.startswith("train"),
 	                            documents))
 	test_docs_id = list(filter(lambda doc: doc.startswith("test"),
@@ -43,6 +44,7 @@ def get_reuters():
 
 	return test_docs, train_docs, train_labels, test_labels
 
+"Get spam corpus"
 def get_spam():
 	path = os.path.dirname(os.path.abspath(__file__)) + '/ling-spam/'
 	path_test = path + 'test-mails/'
@@ -54,7 +56,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_test)):
 		with open(path_test+filename,'r') as email:
-			test_data[i] = email.read()
+			test_data[i] = format_text(email.read()[:450])
 		if("spmsgc" in filename):
 			test_labels[i] = 1
 		else:
@@ -62,7 +64,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_train)):
 		with open(path_train+filename,'r') as email:
-			train_data[i] = email.read()
+			train_data[i] = format_text(email.read()[:450])
 		if("spmsgc" in filename):
 			train_labels[i] = 1
 		else:
@@ -70,21 +72,15 @@ def get_spam():
 
 	return test_data, train_data, train_labels, test_labels
 
-def ssk_kernel(X, Y):
-	#TODO
-	"add kernel"
-	print(X)
-	print(Y)
-
 sys.setrecursionlimit(100000)
 k = 10
 
 #test_docs, train_docs, train_labels, test_labels = get_reuters()
 test_docs, train_docs, train_labels, test_labels = get_spam()
-test_docs = test_docs[:10]
-train_docs = train_docs[:10]
-test_labels = test_labels[:10]
-train_labels = train_labels[:10]
+test_docs = test_docs[:5]+test_docs[697:]
+train_docs = train_docs[:5]+train_docs[697:]
+test_labels = test_labels[:5]+test_labels[697:]
+train_labels = train_labels[:5]+train_labels[697:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 for i in range(0,len(train_docs)):
@@ -96,10 +92,8 @@ for i in range(0,len(train_docs)):
 #normalize
 for i in range(0,len(train_docs)):
 	for j in range(0, len(train_docs)):
-		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]/gram[j][j])
+		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
 
-# TODO:
-"Construct the x and y, look at the labels and how they have done it in the report"
 Y = np.array(train_labels)
 le = preprocessing.LabelEncoder()
 le.fit(Y)
@@ -116,7 +110,7 @@ for i in range(0, len(test_docs)):
 #normalize
 for i in range(0,len(test_docs)):
 	for j in range(0, len(test_docs)):
-		test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]/test_gram[j][j])
+		test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
 
 predicted = model.predict(test_gram)
 
@@ -125,6 +119,10 @@ le = preprocessing.LabelEncoder()
 le.fit(Y)
 Y = le.transform(Y)
 
-print(np.mean(predicted == Y))
+countNumberOfRights = 0
+for i in range(len(Y)):
+	if(predicted[i] == Y[i]):
+		countNumberOfRights += 1
 
+print("right:", countNumberOfRights/len(Y))
 #model.predict()

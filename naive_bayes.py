@@ -53,7 +53,7 @@ def main():
 
     # Create a dictionary of words with its frequency
 
-    train_dir = 'train-mails'
+    train_dir = 'ling-spam/train-mails'
     dictionary = make_Dictionary(train_dir)
     print(dictionary)
     # Prepare feature vectors per training mail and its labels
@@ -69,7 +69,7 @@ def main():
 
     # Test the unseen mails for Spam
 
-    test_dir = 'test-mails'
+    test_dir = 'ling-spam/test-mails'
     test_matrix = extract_features(test_dir, dictionary)
     test_labels = np.zeros(260)
     test_labels[130:260] = 1
