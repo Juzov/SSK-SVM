@@ -1,14 +1,9 @@
-import sys
 import os
-from sklearn import svm
-import sklearn.preprocessing as preprocessing
 import nltk as nltk
-from nltk.corpus import reuters
 from nltk.corpus import stopwords
-import numpy as np
-import math
 import re
 
+"Remove stopwords and symbols"
 def format_text(text):
 	pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*')
 	text.lower()
@@ -47,15 +42,15 @@ def get_spam():
 
 def getMostUsed(train_data = ''):
 	d = {}
-
+	string_length = 5
 	test_data, train_data, train_labels, test_labels = get_spam()
 
 	for i, text in enumerate(train_data):
-		for j in range(0, len(text)-5):
-			if text[j:j+5] in d:
-				d[text[j:j+5]] += 1
+		for j in range(0, len(text)-string_length):
+			if text[j:j+string_length] in d:
+				d[text[j:j+string_length]] += 1
 			else:
-				d[text[j:j+5]] = 1
+				d[text[j:j+string_length]] = 1
 
 	mostUsed = sorted(d.items(), key=lambda x: x[1])
 	mostUsed = mostUsed[len(mostUsed)-200:len(mostUsed)]

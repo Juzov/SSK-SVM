@@ -8,7 +8,7 @@ from nltk.corpus import stopwords
 import numpy as np
 import math
 import re
-import ssk_old as ssk
+import sskPruning as ssk
 import substrings
 
 "Function for removing stopwords and symbols"
@@ -75,18 +75,19 @@ def get_spam():
 
 # SSK needs higher recursion limit, this could be a problem at certain computers
 sys.setrecursionlimit(100000)
-k = 5
+k = 3
+m = 7
 
 # Uncomment/comment this for reuters
 #test_docs, train_docs, train_labels, test_labels = get_reuters()
 # Uncomment/comment this for spam
 test_docs, train_docs, train_labels, test_labels = get_spam()
 
-# Only use 10 documents
-test_docs = test_docs[:5]+test_docs[255:]
-train_docs = train_docs[:5]+train_docs[697:]
-test_labels = test_labels[:5]+test_labels[255:]
-train_labels = train_labels[:5]+train_labels[697:]
+# Only use 20 documents
+test_docs = test_docs[:10]+test_docs[-10:]
+train_docs = train_docs[:10]+train_docs[-10:]
+test_labels = test_labels[:10]+test_labels[-10:]
+train_labels = train_labels[:10]+train_labels[-10:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
@@ -98,10 +99,10 @@ cacheForSSK = {}
 for i in range(0,len(train_docs)):
 	for j in range(i, len(train_docs)):
 		for x in range(0, len(mostUsed)):
-			cacheForSSK[(j,mostUsed[x][0])] = ssk.getSSK(train_docs[j],mostUsed[x][0], k)
-			gram[i][j] += ssk.getSSK(train_docs[i],mostUsed[x][0], k)*cacheForSSK[(j,mostUsed[x][0])]
+			cacheForSSK[(j,mostUsed[x][0])] = ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
+			gram[i][j] += ssk.getSSK(train_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
 			gram[j][i] += gram[i][j]
-		print("new ssk done")
+	print("Document", i+1,"/",len(train_docs),"done")
 
 # Normalize gram matrix
 for i in range(0,len(train_docs)):
@@ -117,6 +118,7 @@ Y = le.transform(Y)
 # Train SVM
 model = svm.SVC(kernel='precomputed')
 model.fit(gram, Y)
+print("Training done")
 
 # Approximate training gram matrix
 test_gram = np.zeros((len(test_docs),len(train_docs)))
@@ -124,9 +126,10 @@ for i in range(0, len(test_docs)):
 	for j in range(0, len(train_docs)):
 		for x in range(0, len(mostUsed)):
 			if ((j,mostUsed[x][0]) in cacheForSSK):
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k)*cacheForSSK[(j,mostUsed[x][0])]
+				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
 			else:
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k)*ssk.getSSK(train_docs[j],mostUsed[x][0], k)
+				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
+	print("Test document", i+1,"/",len(test_docs),"done")
 
 # Normalize training gram matrix
 for i in range(0,len(test_gram)):
@@ -134,6 +137,7 @@ for i in range(0,len(test_gram)):
 		test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
 
 # Test the model
+print("Predicting...")
 predicted = model.predict(test_gram)
 
 # Format Y labels
