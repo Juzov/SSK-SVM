@@ -65,7 +65,7 @@ def kN(sx,t,i):
     if (sx,t,i) in kdict:
         return kdict[(sx,t,i)]
     if( min(len(sx),len(t)) < i):
-        kprimdict[(sx,t,i)] = 0
+        kdict[(sx,t,i)] = 0
         return 0
 
     global lambdaDecay
@@ -78,7 +78,7 @@ def kN(sx,t,i):
             sumJ += kPrimeN(s,t[:j],i - 1) * (lambdaDecay ** 2)
 
     sumJ = kN(s,t,i) + sumJ
-    kprimdict[(sx,t,i)] = sumJ
+    kdict[(sx,t,i)] = sumJ
     return sumJ
 
 def getSSK(s,t,i):
