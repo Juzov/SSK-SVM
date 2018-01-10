@@ -1,6 +1,7 @@
 import os
 import nltk as nltk
 from nltk.corpus import stopwords
+from nltk.corpus import reuters
 import re
 
 "Remove stopwords and symbols"
@@ -11,6 +12,31 @@ def format_text(text):
 	textWihoutSymbols = re.sub(r'[^a-zA-Z\d\s]','', textWihoutStopWords)
 	formattedText = re.sub(r"\s+", " ", textWihoutSymbols)
 	return formattedText
+
+"Get the reuters corpus"
+def get_reuters():
+	documents = reuters.fileids()
+ 
+	train_docs_id = list(filter(lambda doc: doc.startswith("train"),
+	                            documents))
+	test_docs_id = list(filter(lambda doc: doc.startswith("test"),
+	                       documents))
+
+	# train_docs_id = train_docs_id[:2]
+	# test_docs_id = test_docs_id[:2]
+
+	train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
+	test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
+
+	train_docs = [format_text(reuters.raw(doc_id)) for doc_id in train_docs_id]
+	test_docs = [format_text(reuters.raw(doc_id)) for doc_id in test_docs_id]
+
+	train_labels = [reuters.categories(doc_id)
+	                                  for doc_id in train_docs_id]
+	test_labels = [reuters.categories(doc_id)
+	                             for doc_id in test_docs_id]
+
+	return test_docs, train_docs, train_labels, test_labels
 
 "Get spam corpus"
 def get_spam():
@@ -43,7 +69,7 @@ def get_spam():
 def getMostUsed(train_data = ''):
 	d = {}
 	string_length = 5
-	test_data, train_data, train_labels, test_labels = get_spam()
+	test_data, train_data, train_labels, test_labels = get_reuters()
 
 	for i, text in enumerate(train_data):
 		for j in range(0, len(text)-string_length):
@@ -53,6 +79,6 @@ def getMostUsed(train_data = ''):
 				d[text[j:j+string_length]] = 1
 
 	mostUsed = sorted(d.items(), key=lambda x: x[1])
-	mostUsed = mostUsed[len(mostUsed)-200:len(mostUsed)]
+	mostUsed = mostUsed[len(mostUsed)-3000:len(mostUsed)]
 
 	return mostUsed

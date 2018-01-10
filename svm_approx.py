@@ -8,8 +8,9 @@ from nltk.corpus import stopwords
 import numpy as np
 import math
 import re
-import sskPruning as ssk
+import ssk_old as ssk
 import substrings
+import time
 
 "Function for removing stopwords and symbols"
 def format_text(text):
@@ -29,8 +30,8 @@ def get_reuters():
 	test_docs_id = list(filter(lambda doc: doc.startswith("test"),
 	                       documents))
 
-	train_docs_id = train_docs_id[:2]
-	test_docs_id = test_docs_id[:2]
+	# train_docs_id = train_docs_id[:2]
+	# test_docs_id = test_docs_id[:2]
 
 	train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
 	test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
@@ -57,7 +58,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_test)):
 		with open(path_test+filename,'r') as email:
-			test_data[i] = format_text(email.read())
+			test_data[i] = format_text(email.read()[:450])
 		if("spmsgc" in filename):
 			test_labels[i] = 1
 		else:
@@ -65,7 +66,7 @@ def get_spam():
 
 	for i, filename in enumerate(os.listdir(path_train)):
 		with open(path_train+filename,'r') as email:
-			train_data[i] = format_text(email.read())
+			train_data[i] = format_text(email.read()[:450])
 		if("spmsgc" in filename):
 			train_labels[i] = 1
 		else:
@@ -79,28 +80,30 @@ k = 3
 m = 7
 
 # Uncomment/comment this for reuters
-#test_docs, train_docs, train_labels, test_labels = get_reuters()
+test_docs, train_docs, train_labels, test_labels = get_reuters()
 # Uncomment/comment this for spam
-test_docs, train_docs, train_labels, test_labels = get_spam()
+#test_docs, train_docs, train_labels, test_labels = get_spam()
 
 # Only use 20 documents
-test_docs = test_docs[:10]+test_docs[-10:]
-train_docs = train_docs[:10]+train_docs[-10:]
-test_labels = test_labels[:10]+test_labels[-10:]
-train_labels = train_labels[:10]+train_labels[-10:]
+test_docs = test_docs[:1]+test_docs[-1:]
+train_docs = train_docs[:1]+train_docs[-1:]
+test_labels = test_labels[:1]+test_labels[-1:]
+train_labels = train_labels[:1]+train_labels[-1:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
 # Get the most frequent subsequences in the spam corpus
 mostUsed = substrings.getMostUsed()
+print("Most used done")
+start = time.time()
 
 # Approximate gram matrix
 cacheForSSK = {}
 for i in range(0,len(train_docs)):
 	for j in range(i, len(train_docs)):
 		for x in range(0, len(mostUsed)):
-			cacheForSSK[(j,mostUsed[x][0])] = ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
-			gram[i][j] += ssk.getSSK(train_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
+			cacheForSSK[(j,mostUsed[x][0])] = ssk.getSSK(train_docs[j],mostUsed[x][0], k)
+			gram[i][j] += ssk.getSSK(train_docs[i],mostUsed[x][0], k)*cacheForSSK[(j,mostUsed[x][0])]
 			gram[j][i] += gram[i][j]
 	print("Document", i+1,"/",len(train_docs),"done")
 
@@ -110,7 +113,7 @@ for i in range(0,len(train_docs)):
 		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
 
 # Format the training labels
-Y = np.array(train_labels)
+Y = np.array(train_labels).reshape(-1)
 le = preprocessing.LabelEncoder()
 le.fit(Y)
 Y = le.transform(Y)
@@ -126,9 +129,9 @@ for i in range(0, len(test_docs)):
 	for j in range(0, len(train_docs)):
 		for x in range(0, len(mostUsed)):
 			if ((j,mostUsed[x][0]) in cacheForSSK):
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
+				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k)*cacheForSSK[(j,mostUsed[x][0])]
 			else:
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
+				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k)*ssk.getSSK(train_docs[j],mostUsed[x][0], k)
 	print("Test document", i+1,"/",len(test_docs),"done")
 
 # Normalize training gram matrix
@@ -140,12 +143,15 @@ for i in range(0,len(test_gram)):
 print("Predicting...")
 predicted = model.predict(test_gram)
 
+stop = time.time()
 # Format Y labels
-Y = np.array(test_labels)
+Y = np.array(test_labels).reshape(-1)
 le = preprocessing.LabelEncoder()
 le.fit(Y)
 Y = le.transform(Y)
 
+
+print("Time:", stop-start)
 # Calculate error rate
 countNumberOfRights = 0
 print(predicted)

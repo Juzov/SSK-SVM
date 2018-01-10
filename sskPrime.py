@@ -2,8 +2,6 @@ import numpy as np
 import math as math
 import timeit
 
-
-
 def kPrimeN(sx,t,i):
     if(i == 0):
         return 1
