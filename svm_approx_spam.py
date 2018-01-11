@@ -76,7 +76,7 @@ def get_spam():
 
 # SSK needs higher recursion limit, this could be a problem at certain computers
 sys.setrecursionlimit(100000)
-k = 3
+k = 5
 m = 7
 
 # Uncomment/comment this for reuters
@@ -85,10 +85,10 @@ m = 7
 test_docs, train_docs, train_labels, test_labels = get_spam()
 
 # Only use 20 documents
-# test_docs = test_docs[:3]+test_docs[-3:]
-# train_docs = train_docs[:3]+train_docs[-3:]
-# test_labels = test_labels[:3]+test_labels[-3:]
-# train_labels = train_labels[:3]+train_labels[-3:]
+test_docs = test_docs[:3]+test_docs[-3:]
+train_docs = train_docs[:3]+train_docs[-3:]
+test_labels = test_labels[:3]+test_labels[-3:]
+train_labels = train_labels[:3]+train_labels[-3:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
@@ -103,9 +103,9 @@ cacheForSSK = {}
 for i in range(0,len(train_docs)):
 	for j in range(i, len(train_docs)):
 		for x in range(0, len(mostUsed)):
-			cacheForSSK[(j,mostUsed[x][0])] = ssk.getSSK(train_docs[j],mostUsed[x][0], k)
-			gram[i][j] += ssk.getSSK(train_docs[i],mostUsed[x][0], k)*cacheForSSK[(j,mostUsed[x][0])]
-			gram[j][i] += gram[i][j]
+			cacheForSSK[(j,mostUsed[x][0])] = ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
+			gram[i][j] += ssk.getSSK(train_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
+			gram[j][i] = gram[i][j]
 	print("Document", i+1,"/",len(train_docs),"done")
 
 # Normalize gram matrix
@@ -130,9 +130,9 @@ for i in range(0, len(test_docs)):
 	for j in range(0, len(train_docs)):
 		for x in range(0, len(mostUsed)):
 			if ((j,mostUsed[x][0]) in cacheForSSK):
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k)*cacheForSSK[(j,mostUsed[x][0])]
+				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
 			else:
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k)*ssk.getSSK(train_docs[j],mostUsed[x][0], k)
+				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
 	print("Test document", i+1,"/",len(test_docs),"done")
 
 # Normalize training gram matrix
