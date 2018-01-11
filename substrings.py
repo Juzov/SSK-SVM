@@ -25,8 +25,8 @@ def get_reuters():
 	# train_docs_id = train_docs_id[:2]
 	# test_docs_id = test_docs_id[:2]
 
-	train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
-	test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
+	# train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
+	# test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
 
 	train_docs = [format_text(reuters.raw(doc_id)) for doc_id in train_docs_id]
 	test_docs = [format_text(reuters.raw(doc_id)) for doc_id in test_docs_id]
@@ -79,6 +79,6 @@ def getMostUsed(train_data = ''):
 				d[text[j:j+string_length]] = 1
 
 	mostUsed = sorted(d.items(), key=lambda x: x[1])
-	mostUsed = mostUsed[len(mostUsed)-3000:len(mostUsed)]
+	mostUsed = mostUsed[len(mostUsed)-200:len(mostUsed)]
 
 	return mostUsed

@@ -33,8 +33,8 @@ def get_reuters():
 	# train_docs_id = train_docs_id[:2]
 	# test_docs_id = test_docs_id[:2]
 
-	train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
-	test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
+	# train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
+	# test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
 
 	train_docs = [format_text(reuters.raw(doc_id)) for doc_id in train_docs_id]
 	test_docs = [format_text(reuters.raw(doc_id)) for doc_id in test_docs_id]
@@ -85,15 +85,16 @@ test_docs, train_docs, train_labels, test_labels = get_reuters()
 #test_docs, train_docs, train_labels, test_labels = get_spam()
 
 # Only use 20 documents
-test_docs = test_docs[:1]+test_docs[-1:]
-train_docs = train_docs[:1]+train_docs[-1:]
-test_labels = test_labels[:1]+test_labels[-1:]
-train_labels = train_labels[:1]+train_labels[-1:]
+test_docs = test_docs[:3]+test_docs[-3:]
+train_docs = train_docs[:3]+train_docs[-3:]
+test_labels = test_labels[:3]+test_labels[-3:]
+train_labels = train_labels[:3]+train_labels[-3:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
 # Get the most frequent subsequences in the spam corpus
 mostUsed = substrings.getMostUsed()
+print(mostUsed)
 print("Most used done")
 start = time.time()
 
