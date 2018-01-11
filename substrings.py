@@ -69,7 +69,7 @@ def get_spam():
 def getMostUsed(train_data = ''):
 	d = {}
 	string_length = 5
-	test_data, train_data, train_labels, test_labels = get_reuters()
+	test_data, train_data, train_labels, test_labels = get_spam()
 
 	for i, text in enumerate(train_data):
 		for j in range(0, len(text)-string_length):
