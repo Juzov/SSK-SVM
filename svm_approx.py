@@ -59,22 +59,22 @@ def inner_loop(i,j):
 	for x in range(0, len(most_used)):
 		cacheForSSK[(j,most_used[x][0])] = ssk.run_instance(train_docs[j],most_used[x][0])
 		ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
-	return [[i,j],ij_instance]
+	return ij_instance
 
 gram_array = Parallel(n_jobs=-1)(delayed(inner_loop)(i,j) for i in range(0,len(train_docs)) for j in range(i, len(train_docs)))
-print (gram_array)
 
-#for i in range(0,len(train_docs)):
-#	for j in range(i, len(train_docs)):
-#		gram[i][j] = gram_array.pop(0)
-#		gram[j][i] += gram[i][j]
+
+for i in range(0,len(train_docs)):
+	for j in range(i, len(train_docs)):
+		gram[i][j] = gram_array.pop(0)
+		gram[j][i] += gram[i][j]
 
 # Normalize gram matrix
 for i in range(0,len(train_docs)):
 	for j in range(0, len(train_docs)):
 		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
 
-
+print(gram)
 
 # Format the training labels
 Y = np.array(train_labels).reshape(-1)
