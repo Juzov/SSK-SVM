@@ -10,6 +10,7 @@ from ssk_cache import StringSubsequenceKernel
 from ssk_prune import StringSubsequenceKernelWithPrune
 import time
 import string_functions
+from joblib import Parallel, delayed
 
 # SSK needs higher recursion limit, this could be a problem at certain computers
 sys.setrecursionlimit(100000)
@@ -48,18 +49,32 @@ start = time.time()
 
 # Approximate gram matrix
 cacheForSSK = {}
-for i in range(0,len(train_docs)):
-	for j in range(i, len(train_docs)):
-		for x in range(0, len(most_used)):
-			cacheForSSK[(j,most_used[x][0])] = ssk.run_instance(train_docs[j],most_used[x][0])
-			gram[i][j] += ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
-			gram[j][i] += gram[i][j]
-	print("Document", i+1,"/",len(train_docs),"done")
+
+def inner_loop(i,j):
+	global most_used
+	global train_docs
+	global cacheForSSK
+
+	ij_instance = 0
+	for x in range(0, len(most_used)):
+		cacheForSSK[(j,most_used[x][0])] = ssk.run_instance(train_docs[j],most_used[x][0])
+		ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+	return [[i,j],ij_instance]
+
+gram_array = Parallel(n_jobs=-1)(delayed(inner_loop)(i,j) for i in range(0,len(train_docs)) for j in range(i, len(train_docs)))
+print (gram_array)
+
+#for i in range(0,len(train_docs)):
+#	for j in range(i, len(train_docs)):
+#		gram[i][j] = gram_array.pop(0)
+#		gram[j][i] += gram[i][j]
 
 # Normalize gram matrix
 for i in range(0,len(train_docs)):
 	for j in range(0, len(train_docs)):
 		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
+
+
 
 # Format the training labels
 Y = np.array(train_labels).reshape(-1)
