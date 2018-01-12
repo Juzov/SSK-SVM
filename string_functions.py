@@ -64,7 +64,7 @@ def get_spam():
     for i, filename in enumerate(os.listdir(path_test)):
         with open(path_test + filename, 'r') as email:
             test_data[i] = format_text(email.read())
-        if("spmsgc" in filename):
+        if("spmsg" in filename):
             test_labels[i] = 1
         else:
             test_labels[i] = 0
@@ -72,7 +72,7 @@ def get_spam():
     for i, filename in enumerate(os.listdir(path_train)):
         with open(path_train + filename, 'r') as email:
             train_data[i] = format_text(email.read())
-        if("spmsgc" in filename):
+        if("spmsg" in filename):
             train_labels[i] = 1
         else:
             train_labels[i] = 0
