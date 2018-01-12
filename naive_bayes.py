@@ -16,6 +16,7 @@ def make_Dictionary(train_dir):
             for i,line in enumerate(m):
                 if i != 1:
                     words = line.split()
+                    print("Words ", words)
                     all_words += words
 
     dictionary = Counter(all_words)
@@ -26,14 +27,22 @@ def make_Dictionary(train_dir):
             del dictionary[item]
         elif len(item) == 1:
             del dictionary[item]
-    dictionary = dictionary.most_common(100)
+    
+    dictionary = dictionary.most_common(1000)
+    # dictionary = list(dictionary.items())
+    
+    # global key
+    # new_dictionary = []
+    # for item,curr_key in dictionary:
+    #     if len(item) == key:
+    #         new_dictionary.append(item)
     return dictionary
 
 def extract_features(train_dir, dictionary):
     emails = []
     for f in os.listdir(train_dir):
         emails.append(os.path.join(train_dir,f))
-    features_matrix = np.zeros((len(emails),100))
+    features_matrix = np.zeros((len(emails),len(dictionary)))
     docID = 0;
     for mail in emails:
       with open(mail) as m:
@@ -49,13 +58,16 @@ def extract_features(train_dir, dictionary):
         docID = docID + 1
     return features_matrix
 
+#Global variable for the length of substrings
+#key = 4 
 def main():
-
     # Create a dictionary of words with its frequency
-
     train_dir = 'ling-spam/train-mails'
     dictionary = make_Dictionary(train_dir)
-    print(dictionary)
+    #print(len(dictionary))
+
+    exit()
+    
     # Prepare feature vectors per training mail and its labels
 
     train_labels = np.zeros(702)
