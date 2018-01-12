@@ -34,10 +34,10 @@ else:
 test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam)
 
 # Only use 20 documents
-test_docs = test_docs[:3]+test_docs[-3:]
-train_docs = train_docs[:3]+train_docs[-3:]
-test_labels = test_labels[:3]+test_labels[-3:]
-train_labels = train_labels[:3]+train_labels[-3:]
+test_docs = test_docs[:20]+test_docs[-20:]
+train_docs = train_docs[:20]+train_docs[-20:]
+test_labels = test_labels[:20]+test_labels[-20:]
+train_labels = train_labels[:20]+train_labels[-20:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
@@ -50,24 +50,33 @@ start = time.time()
 # Approximate gram matrix
 cacheForSSK = {}
 
-def inner_loop(i,j):
-	global most_used
-	global train_docs
-	global cacheForSSK
-
+def inner_loop(i,j, most_used, train_docs, cacheForSSK):
 	ij_instance = 0
 	for x in range(0, len(most_used)):
-		cacheForSSK[(j,most_used[x][0])] = ssk.run_instance(train_docs[j],most_used[x][0])
 		ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
 	return ij_instance
 
-gram_array = Parallel(n_jobs=-1)(delayed(inner_loop)(i,j) for i in range(0,len(train_docs)) for j in range(i, len(train_docs)))
+def inner_loop_testing(i,j,most_used, test_docs, cacheForSSK):
+	ij_instance = 0
+	for x in range(0, len(most_used)):
+		ij_instance	+= ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+	return ij_instance
 
+def inner_loop_cache(j,x,most_used,train_docs):
+	result = ssk.run_instance(train_docs[j],most_used[x][0])
+	return [j, most_used[x][0], result]
+
+cache_array = Parallel(n_jobs=-1)(delayed(inner_loop_cache)(i,x,most_used,train_docs) for i in range(0,len(train_docs)) for x in range(0, len(most_used)))
+
+for i in range(0,len(cache_array)):
+	cacheForSSK[(cache_array[i][0],cache_array[i][1])] = cache_array[i][2]
+
+gram_array = Parallel(n_jobs=-1)(delayed(inner_loop)(i,j,most_used,train_docs,cacheForSSK) for i in range(0,len(train_docs)) for j in range(i, len(train_docs)))
 
 for i in range(0,len(train_docs)):
 	for j in range(i, len(train_docs)):
 		gram[i][j] = gram_array.pop(0)
-		gram[j][i] += gram[i][j]
+		gram[j][i] = gram[i][j]
 
 # Normalize gram matrix
 for i in range(0,len(train_docs)):
@@ -89,14 +98,20 @@ print("Training done")
 
 # Approximate training gram matrix
 test_gram = np.zeros((len(test_docs),len(train_docs)))
-for i in range(0, len(test_docs)):
+
+test_gram_array = Parallel(n_jobs=-1)(delayed(inner_loop_testing)(i,j,most_used,test_docs,cacheForSSK) for i in range(0,len(test_docs)) for j in range(0, len(train_docs)))
+for i in range(0,len(train_docs)):
 	for j in range(0, len(train_docs)):
-		for x in range(0, len(most_used)):
-			if ((j,most_used[x][0]) in cacheForSSK):
-				test_gram[i][j] = ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
-			else:
-				test_gram[i][j] = ssk.run_instance(test_docs[i],most_used[x][0])*ssk.run_instance(train_docs[j],most_used[x][0])
-	print("Test document", i+1,"/",len(test_docs),"done")
+		test_gram[i][j] = test_gram_array.pop(0)
+
+# for i in range(0, len(test_docs)):
+# 	for j in range(0, len(train_docs)):
+# 		for x in range(0, len(most_used)):
+# 			if ((j,most_used[x][0]) in cacheForSSK):
+# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+# 			else:
+# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*ssk.run_instance(train_docs[j],most_used[x][0])
+# 	print("Test document", i+1,"/",len(test_docs),"done")
 
 # Normalize training gram matrix
 for i in range(0,len(test_gram)):
