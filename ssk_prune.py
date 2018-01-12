@@ -103,4 +103,3 @@ string_t = string_t.lower()
 
 ssk_object = StringSubsequenceKernelWithPrune(2, 0.5, 4)
 result = ssk_object.run_instance(string_s, string_t)
-print ('result', result)
