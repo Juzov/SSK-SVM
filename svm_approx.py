@@ -34,10 +34,10 @@ else:
 test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam)
 
 # Only use 20 documents
-test_docs = test_docs[:42]+test_docs[-42:]
-train_docs = train_docs[:155]+train_docs[-155:]
-test_labels = test_labels[:42]+test_labels[-42:]
-train_labels = train_labels[:155]+train_labels[-155:]
+test_docs = test_docs[:5]+test_docs[-5:]
+train_docs = train_docs[:10]+train_docs[-10:]
+test_labels = test_labels[:5]+test_labels[-5:]
+train_labels = train_labels[:10]+train_labels[-10:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
@@ -78,14 +78,20 @@ for i in range(0,len(train_docs)):
 		gram[i][j] = gram_array.pop(0)
 		gram[j][i] = gram[i][j]
 
+print(gram)
+
 # Normalize gram matrix
 unnormalizedTrain = np.zeros(len(train_docs))
 for i in range(0,len(train_docs)):
-	unnormalizedTrain[i] = gram[i][i]
+	if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
+		unnormalizedTrain[i] = 0
+	else:
+		unnormalizedTrain[i] = gram[i][i]
 	for j in range(0, len(train_docs)):
-		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
-
-#print(gram)
+		if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
+			gram[i][j] = 0
+		else:
+			gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
 
 # Format the training labels
 Y = np.array(train_labels).reshape(-1)
@@ -118,7 +124,10 @@ for i in range(0,len(test_gram)):
 # Normalize training gram matrix
 for i in range(0,len(test_gram)):
 	for j in range(0, len(test_gram[0])):
-		test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*unnormalizedTrain[j])
+		if(math.isnan(test_gram[i][i]) or math.isnan(unnormalizedTrain[j]) or test_gram[i][i] == 0 or unnormalizedTrain[j] == 0):
+			test_gram[i][j] = 0
+		else:
+			test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*unnormalizedTrain[j])
 
 # Test the model
 print("Predicting...")

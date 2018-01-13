@@ -3,7 +3,7 @@ import nltk as nltk
 from nltk.corpus import stopwords
 from nltk.corpus import reuters
 import re
-
+import numpy as np
 # Remove stopwords and symbols
 
 
@@ -58,37 +58,33 @@ def get_spam():
     with open(path + '/SMSSpamCollection', 'r') as email:
         content = email.readlines()
 
-    test_data = []
-    train_data = []
-    test_labels = []
-    train_labels = []
+    spam_data = []
+    ham_data = []
 
     for i, message in enumerate(content):
         message = message.strip()
-        if(i < len(content)/2):
-            if("spam" in message):
-                train_labels.append(1)
-                message = message.replace('spam','')
-                train_data.append(format_text(message))
-            else:
-                train_labels.append(0)
-                message = message.replace('ham','')
-                train_data.append(format_text(message))
-
+        if("spam" in message):
+            message = message.replace('spam','')
+            spam_data.append(format_text(message))
         else:
-            if("spam" in message):
-                test_labels.append(1)
-                message = message.replace('spam','')
-                test_data.append(format_text(message))
-            else:
-                test_labels.append(0)
-                message = message.replace('ham','')
-                test_data.append(format_text(message))
+            message = message.replace('ham','')
+            ham_data.append(format_text(message))
 
-    test_data = list(filter(None, test_data))
-    train_data = list(filter(None, train_data))
-    train_labels = list(filter(None, train_labels))
-    test_labels = list(filter(None, test_labels))
+    test_spam = spam_data[:int(len(spam_data)*0.25)]
+    train_spam = spam_data[int(len(spam_data)*0.25):]
+    test_ham = ham_data[:int(len(ham_data)*0.25)]
+    train_ham = ham_data[int(len(ham_data)*0.25):]
+
+    test_data = test_ham + test_spam
+    train_data = train_ham + train_spam
+
+    train_labels_ham = np.zeros(int(len(train_ham))).tolist()
+    train_labels_spam = np.ones(int(len(train_spam))).tolist()
+    train_labels = train_labels_ham + train_labels_spam
+
+    test_labels_ham = np.zeros(int(len(test_ham))).tolist()
+    test_labels_spam = np.ones(int(len(test_spam))).tolist()
+    test_labels = test_labels_ham + test_labels_spam
 
     return test_data, train_data, train_labels, test_labels
 
