@@ -52,7 +52,8 @@ def get_reuters():
 #Get spam corpus
 
 
-def get_spam():
+def get_spam(number_of_docs=500):
+    number_of_docs = int(number_of_docs/2)
     path = os.path.dirname(os.path.abspath(__file__))
 
     with open(path + '/SMSSpamCollection', 'r') as email:
@@ -86,11 +87,16 @@ def get_spam():
     test_labels_spam = np.ones(int(len(test_spam))).tolist()
     test_labels = test_labels_ham + test_labels_spam
 
+    test_data = test_data[:number_of_docs]+test_data[-number_of_docs:]
+    train_data = train_data[:number_of_docs]+train_data[-number_of_docs:]
+    test_labels = test_labels[:number_of_docs]+test_labels[-number_of_docs:]
+    train_labels = train_labels[:number_of_docs]+train_labels[-number_of_docs:]
+
     return test_data, train_data, train_labels, test_labels
 
 def get_most_used(is_spam):
     d = {}
-    string_length = 8
+    string_length = 3
     test_data, train_data, train_labels, test_labels = get_info(is_spam)
 
     for i, text in enumerate(train_data):

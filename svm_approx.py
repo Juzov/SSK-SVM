@@ -20,7 +20,7 @@ to_prune = True
 is_spam = True
 
 #Setting SSK Parameters
-k = 4
+k = 3
 lambda_decay = 0.5
 m = 7
 ssk = None
@@ -32,12 +32,6 @@ else:
 	ssk = StringSubsequenceKernel(k,lambda_decay)
 
 test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam)
-
-# Only use 20 documents
-test_docs = test_docs[:50]+test_docs[-50:]
-train_docs = train_docs[:50]+train_docs[-50:]
-test_labels = test_labels[:50]+test_labels[-50:]
-train_labels = train_labels[:50]+train_labels[-50:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
