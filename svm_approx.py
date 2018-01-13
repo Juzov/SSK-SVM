@@ -34,16 +34,16 @@ else:
 test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam)
 
 # Only use 20 documents
-test_docs = test_docs[:20]+test_docs[-20:]
-train_docs = train_docs[:20]+train_docs[-20:]
-test_labels = test_labels[:20]+test_labels[-20:]
-train_labels = train_labels[:20]+train_labels[-20:]
+test_docs = test_docs[:42]+test_docs[-42:]
+train_docs = train_docs[:155]+train_docs[-155:]
+test_labels = test_labels[:42]+test_labels[-42:]
+train_labels = train_labels[:155]+train_labels[-155:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
 # Get the most frequent subsequences in the spam corpus
 most_used = string_functions.get_most_used(is_spam)
-print(most_used)
+#print(most_used)
 print("Most used done")
 start = time.time()
 
@@ -53,18 +53,18 @@ cacheForSSK = {}
 def inner_loop(i,j, most_used, train_docs, cacheForSSK):
 	ij_instance = 0
 	for x in range(0, len(most_used)):
-		ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+		ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,x)]
 	return ij_instance
 
 def inner_loop_testing(i,j,most_used, test_docs, cacheForSSK):
 	ij_instance = 0
 	for x in range(0, len(most_used)):
-		ij_instance	+= ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+		ij_instance	+= ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,x)]
 	return ij_instance
 
 def inner_loop_cache(j,x,most_used,train_docs):
 	result = ssk.run_instance(train_docs[j],most_used[x][0])
-	return [j, most_used[x][0], result]
+	return [j, x, result]
 
 cache_array = Parallel(n_jobs=-1)(delayed(inner_loop_cache)(i,x,most_used,train_docs) for i in range(0,len(train_docs)) for x in range(0, len(most_used)))
 
@@ -79,11 +79,13 @@ for i in range(0,len(train_docs)):
 		gram[j][i] = gram[i][j]
 
 # Normalize gram matrix
+unnormalizedTrain = np.zeros(len(train_docs))
 for i in range(0,len(train_docs)):
+	unnormalizedTrain[i] = gram[i][i]
 	for j in range(0, len(train_docs)):
 		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
 
-print(gram)
+#print(gram)
 
 # Format the training labels
 Y = np.array(train_labels).reshape(-1)
@@ -100,8 +102,8 @@ print("Training done")
 test_gram = np.zeros((len(test_docs),len(train_docs)))
 
 test_gram_array = Parallel(n_jobs=-1)(delayed(inner_loop_testing)(i,j,most_used,test_docs,cacheForSSK) for i in range(0,len(test_docs)) for j in range(0, len(train_docs)))
-for i in range(0,len(train_docs)):
-	for j in range(0, len(train_docs)):
+for i in range(0,len(test_gram)):
+	for j in range(0, len(test_gram[0])):
 		test_gram[i][j] = test_gram_array.pop(0)
 
 # for i in range(0, len(test_docs)):
@@ -116,7 +118,7 @@ for i in range(0,len(train_docs)):
 # Normalize training gram matrix
 for i in range(0,len(test_gram)):
 	for j in range(0, len(test_gram[0])):
-		test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
+		test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*unnormalizedTrain[j])
 
 # Test the model
 print("Predicting...")

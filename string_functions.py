@@ -53,29 +53,42 @@ def get_reuters():
 
 
 def get_spam():
-    path = os.path.dirname(os.path.abspath(__file__)) + '/ling-spam/'
-    path_test = path + 'test-mails/'
-    path_train = path + 'train-mails/'
-    test_data = [None] * len(os.listdir(path_test))
-    train_data = [None] * len(os.listdir(path_train))
-    test_labels = [None] * len(os.listdir(path_test))
-    train_labels = [None] * len(os.listdir(path_train))
+    path = os.path.dirname(os.path.abspath(__file__))
 
-    for i, filename in enumerate(os.listdir(path_test)):
-        with open(path_test + filename, 'r') as email:
-            test_data[i] = format_text(email.read())
-        if("spmsg" in filename):
-            test_labels[i] = 1
-        else:
-            test_labels[i] = 0
+    with open(path + '/SMSSpamCollection', 'r') as email:
+        content = email.readlines()
 
-    for i, filename in enumerate(os.listdir(path_train)):
-        with open(path_train + filename, 'r') as email:
-            train_data[i] = format_text(email.read())
-        if("spmsg" in filename):
-            train_labels[i] = 1
+    test_data = []
+    train_data = []
+    test_labels = []
+    train_labels = []
+
+    for i, message in enumerate(content):
+        message = message.strip()
+        if(i < len(content)/2):
+            if("spam" in message):
+                train_labels.append(1)
+                message = message.replace('spam','')
+                train_data.append(format_text(message))
+            else:
+                train_labels.append(0)
+                message = message.replace('ham','')
+                train_data.append(format_text(message))
+
         else:
-            train_labels[i] = 0
+            if("spam" in message):
+                test_labels.append(1)
+                message = message.replace('spam','')
+                test_data.append(format_text(message))
+            else:
+                test_labels.append(0)
+                message = message.replace('ham','')
+                test_data.append(format_text(message))
+
+    test_data = list(filter(None, test_data))
+    train_data = list(filter(None, train_data))
+    train_labels = list(filter(None, train_labels))
+    test_labels = list(filter(None, test_labels))
 
     return test_data, train_data, train_labels, test_labels
 
