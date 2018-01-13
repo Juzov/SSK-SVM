@@ -70,10 +70,10 @@ def get_spam():
             message = message.replace('ham','')
             ham_data.append(format_text(message))
 
-    test_spam = spam_data[:int(len(spam_data)*0.25)]
-    train_spam = spam_data[int(len(spam_data)*0.25):]
-    test_ham = ham_data[:int(len(ham_data)*0.25)]
-    train_ham = ham_data[int(len(ham_data)*0.25):]
+    test_spam = spam_data[:int(len(spam_data)*0.5)]
+    train_spam = spam_data[int(len(spam_data)*0.5):]
+    test_ham = ham_data[:int(len(ham_data)*0.5)]
+    train_ham = ham_data[int(len(ham_data)*0.5):]
 
     test_data = test_ham + test_spam
     train_data = train_ham + train_spam
@@ -90,7 +90,7 @@ def get_spam():
 
 def get_most_used(is_spam):
     d = {}
-    string_length = 5
+    string_length = 8
     test_data, train_data, train_labels, test_labels = get_info(is_spam)
 
     for i, text in enumerate(train_data):
