@@ -18,11 +18,30 @@ def format_text(text):
 
 # Get the reuters corpus
 
-def get_info(is_spam):
-	if(is_spam):
-		return get_spam()
-	else:
-		return get_reuters()
+
+def get_info(is_spam, amount_of_documents):
+    test_docs = None
+    train_docs = None
+    train_labels = None
+    test_labels = None
+    if(is_spam):
+        test_docs, train_docs, train_labels, test_labels = get_spam()
+    else:
+        test_docs, train_docs, train_labels, test_labels = get_reuters()
+    
+    first_and_last = int(amount_of_documents * 0.5)
+
+    test_docs = test_docs[: first_and_last] + \
+        test_docs[- first_and_last:]
+    train_docs = train_docs[: first_and_last] + \
+        train_docs[- first_and_last:]
+    test_labels = test_labels[: 
+        first_and_last] + test_labels[- first_and_last:]
+    train_labels = train_labels[: 
+        first_and_last] + train_labels[- first_and_last:]
+
+    return test_docs, train_docs, train_labels, test_labels
+
 
 def get_reuters():
     documents = reuters.fileids()
@@ -49,7 +68,7 @@ def get_reuters():
     return test_docs, train_docs, train_labels, test_labels
 
 
-#Get spam corpus
+# Get spam corpus
 
 
 def get_spam():
@@ -64,16 +83,16 @@ def get_spam():
     for i, message in enumerate(content):
         message = message.strip()
         if("spam" in message):
-            message = message.replace('spam','')
+            message = message.replace('spam', '')
             spam_data.append(format_text(message))
         else:
-            message = message.replace('ham','')
+            message = message.replace('ham', '')
             ham_data.append(format_text(message))
 
-    test_spam = spam_data[:int(len(spam_data)*0.5)]
-    train_spam = spam_data[int(len(spam_data)*0.5):]
-    test_ham = ham_data[:int(len(ham_data)*0.5)]
-    train_ham = ham_data[int(len(ham_data)*0.5):]
+    test_spam = spam_data[:int(len(spam_data) * 0.5)]
+    train_spam = spam_data[int(len(spam_data) * 0.5):]
+    test_ham = ham_data[:int(len(ham_data) * 0.5)]
+    train_ham = ham_data[int(len(ham_data) * 0.5):]
 
     test_data = test_ham + test_spam
     train_data = train_ham + train_spam
@@ -88,12 +107,12 @@ def get_spam():
 
     return test_data, train_data, train_labels, test_labels
 
-def get_most_used(is_spam):
-    d = {}
-    string_length = 8
-    test_data, train_data, train_labels, test_labels = get_info(is_spam)
 
-    for i, text in enumerate(train_data):
+def get_most_used(word_amount, k, train_docs):
+    d = {}
+    string_length = k
+
+    for i, text in enumerate(train_docs):
         for j in range(0, len(text) - string_length):
             if text[j:j + string_length] in d:
                 d[text[j:j + string_length]] += 1
@@ -101,6 +120,6 @@ def get_most_used(is_spam):
                 d[text[j:j + string_length]] = 1
 
     most_used = sorted(d.items(), key=lambda x: x[1])
-    most_used = most_used[len(most_used) - 200:len(most_used)]
+    most_used = most_used[len(most_used) - word_amount:len(most_used)]
 
     return most_used

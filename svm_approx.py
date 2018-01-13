@@ -6,8 +6,6 @@ import numpy as np
 import math
 import re
 #import ssk_prune as ssk
-from ssk_cache import StringSubsequenceKernel
-from ssk_prune import StringSubsequenceKernelWithPrune
 import time
 import string_functions
 from joblib import Parallel, delayed
@@ -15,140 +13,122 @@ from joblib import Parallel, delayed
 # SSK needs higher recursion limit, this could be a problem at certain computers
 sys.setrecursionlimit(100000)
 
-to_prune = True
-#spam or reuters?
-is_spam = True
+def inner_loop(i,j, most_used, train_docs, cacheForSSK, ssk):
+		ij_instance = 0
+		for x in range(0, len(most_used)):
+			ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,x)]
+		return ij_instance
 
-#Setting SSK Parameters
-k = 4
-lambda_decay = 0.5
-m = 7
-ssk = None
-
-if(to_prune):
-	theta = 3*k
-	ssk = StringSubsequenceKernelWithPrune(k,lambda_decay,theta)
-else:
-	ssk = StringSubsequenceKernel(k,lambda_decay)
-
-test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam)
-
-# Only use 20 documents
-test_docs = test_docs[:50]+test_docs[-50:]
-train_docs = train_docs[:50]+train_docs[-50:]
-test_labels = test_labels[:50]+test_labels[-50:]
-train_labels = train_labels[:50]+train_labels[-50:]
-
-gram = np.zeros((len(train_docs),len(train_docs)))
-
-# Get the most frequent subsequences in the spam corpus
-most_used = string_functions.get_most_used(is_spam)
-#print(most_used)
-print("Most used done")
-start = time.time()
-
-# Approximate gram matrix
-cacheForSSK = {}
-
-def inner_loop(i,j, most_used, train_docs, cacheForSSK):
-	ij_instance = 0
-	for x in range(0, len(most_used)):
-		ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,x)]
-	return ij_instance
-
-def inner_loop_testing(i,j,most_used, test_docs, cacheForSSK):
+def inner_loop_testing(i,j,most_used, test_docs, cacheForSSK, ssk):
 	ij_instance = 0
 	for x in range(0, len(most_used)):
 		ij_instance	+= ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,x)]
 	return ij_instance
 
-def inner_loop_cache(j,x,most_used,train_docs):
+def inner_loop_cache(j,x,most_used,train_docs, ssk):
 	result = ssk.run_instance(train_docs[j],most_used[x][0])
 	return [j, x, result]
 
-cache_array = Parallel(n_jobs=-1)(delayed(inner_loop_cache)(i,x,most_used,train_docs) for i in range(0,len(train_docs)) for x in range(0, len(most_used)))
+#where k also advocates the length of most used words e.g only words of size 5
+def svm_calc(is_spam,amount_of_documents, ssk, word_amount, k):
+	#print(most_used)
+	print("Most used done")
+	start = time.time()
 
-for i in range(0,len(cache_array)):
-	cacheForSSK[(cache_array[i][0],cache_array[i][1])] = cache_array[i][2]
+	test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam, amount_of_documents)
+	most_used = string_functions.get_most_used(word_amount,k,train_docs)
 
-gram_array = Parallel(n_jobs=-1)(delayed(inner_loop)(i,j,most_used,train_docs,cacheForSSK) for i in range(0,len(train_docs)) for j in range(i, len(train_docs)))
+	gram = np.zeros((len(train_docs),len(train_docs)))
 
-for i in range(0,len(train_docs)):
-	for j in range(i, len(train_docs)):
-		gram[i][j] = gram_array.pop(0)
-		gram[j][i] = gram[i][j]
+	# Approximate gram matrix
+	cacheForSSK = {}
 
-#print(gram)
+	cache_array = Parallel(n_jobs=-1)(delayed(inner_loop_cache)(i,x,most_used,train_docs,ssk) for i in range(0,len(train_docs)) for x in range(0, len(most_used)))
 
-# Normalize gram matrix
-unnormalizedTrain = np.zeros(len(train_docs))
-for i in range(0,len(train_docs)):
-	# if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
-	# 	unnormalizedTrain[i] = 0
-	# else:
-	# 	unnormalizedTrain[i] = gram[i][i]
-	for j in range(0, len(train_docs)):
-		if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
-			gram[i][j] = 0
-		else:
-			gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
+	for i in range(0,len(cache_array)):
+		cacheForSSK[(cache_array[i][0],cache_array[i][1])] = cache_array[i][2]
 
-# Format the training labels
-Y = np.array(train_labels).reshape(-1)
-le = preprocessing.LabelEncoder()
-le.fit(Y)
-Y = le.transform(Y)
+	gram_array = Parallel(n_jobs=-1)(delayed(inner_loop)(i,j,most_used,train_docs,cacheForSSK,ssk) for i in range(0,len(train_docs)) for j in range(i, len(train_docs)))
 
-# Train SVM
-model = svm.SVC(kernel='precomputed')
-model.fit(gram, Y)
-print("Training done")
+	for i in range(0,len(train_docs)):
+		for j in range(i, len(train_docs)):
+			gram[i][j] = gram_array.pop(0)
+			gram[j][i] = gram[i][j]
 
-# Approximate training gram matrix
-test_gram = np.zeros((len(test_docs),len(train_docs)))
+	#print(gram)
 
-test_gram_array = Parallel(n_jobs=-1)(delayed(inner_loop_testing)(i,j,most_used,test_docs,cacheForSSK) for i in range(0,len(test_docs)) for j in range(0, len(train_docs)))
-for i in range(0,len(test_gram)):
-	for j in range(0, len(test_gram[0])):
-		test_gram[i][j] = test_gram_array.pop(0)
+	# Normalize gram matrix
+	unnormalizedTrain = np.zeros(len(train_docs))
+	for i in range(0,len(train_docs)):
+		# if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
+		# 	unnormalizedTrain[i] = 0
+		# else:
+		# 	unnormalizedTrain[i] = gram[i][i]
+		for j in range(0, len(train_docs)):
+			if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
+				gram[i][j] = 0
+			else:
+				gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
 
-# for i in range(0, len(test_docs)):
-# 	for j in range(0, len(train_docs)):
-# 		for x in range(0, len(most_used)):
-# 			if ((j,most_used[x][0]) in cacheForSSK):
-# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
-# 			else:
-# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*ssk.run_instance(train_docs[j],most_used[x][0])
-# 	print("Test document", i+1,"/",len(test_docs),"done")
+	# Format the training labels
+	Y = np.array(train_labels).reshape(-1)
+	le = preprocessing.LabelEncoder()
+	le.fit(Y)
+	Y = le.transform(Y)
 
-# Normalize training gram matrix
-for i in range(0,len(test_gram)):
-	for j in range(0, len(test_gram[0])):
-		if(math.isnan(test_gram[i][i]) or test_gram[i][i] == 0 or math.isnan(test_gram[j][j]) or test_gram[j][j] == 0):
-			test_gram[i][j] = 0
-		else:
-			test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
+	# Train SVM
+	model = svm.SVC(kernel='precomputed')
+	model.fit(gram, Y)
+	print("Training done")
 
-# Test the model
-print("Predicting...")
-predicted = model.predict(test_gram)
+	# Approximate training gram matrix
+	test_gram = np.zeros((len(test_docs),len(train_docs)))
 
-stop = time.time()
-# Format Y labels
-Y = np.array(test_labels).reshape(-1)
-le = preprocessing.LabelEncoder()
-le.fit(Y)
-Y = le.transform(Y)
+	test_gram_array = Parallel(n_jobs=-1)(delayed(inner_loop_testing)(i,j,most_used,test_docs,cacheForSSK,ssk) for i in range(0,len(test_docs)) for j in range(0, len(train_docs)))
+	for i in range(0,len(test_gram)):
+		for j in range(0, len(test_gram[0])):
+			test_gram[i][j] = test_gram_array.pop(0)
 
+	# for i in range(0, len(test_docs)):
+	# 	for j in range(0, len(train_docs)):
+	# 		for x in range(0, len(most_used)):
+	# 			if ((j,most_used[x][0]) in cacheForSSK):
+	# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+	# 			else:
+	# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*ssk.run_instance(train_docs[j],most_used[x][0])
+	# 	print("Test document", i+1,"/",len(test_docs),"done")
 
-print("Time:", stop-start)
-# Calculate error rate
-countNumberOfRights = 0
-print(predicted)
-print(Y)
-for i in range(len(Y)):
-	if(predicted[i] == Y[i]):
-		countNumberOfRights += 1
+	# Normalize training gram matrix
+	for i in range(0,len(test_gram)):
+		for j in range(0, len(test_gram[0])):
+			if(math.isnan(test_gram[i][i]) or test_gram[i][i] == 0 or math.isnan(test_gram[j][j]) or test_gram[j][j] == 0):
+				test_gram[i][j] = 0
+			else:
+				test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
 
-print("right:", countNumberOfRights/len(Y))
-#model.predict()
+	# Test the model
+	print("Predicting...")
+	predicted = model.predict(test_gram)
+
+	stop = time.time()
+	# Format Y labels
+	Y = np.array(test_labels).reshape(-1)
+	le = preprocessing.LabelEncoder()
+	le.fit(Y)
+	Y = le.transform(Y)
+
+	elapsed_time = stop-start
+
+	print("Time:", elapsed_time)
+	# Calculate error rate
+	countNumberOfRights = 0
+	print(predicted)
+	print(Y)
+	for i in range(len(Y)):
+		if(predicted[i] == Y[i]):
+			countNumberOfRights += 1
+
+	accuracy = countNumberOfRights/len(Y)
+	print("right:", accuracy)
+	
+	return accuracy, elapsed_time
