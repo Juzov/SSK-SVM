@@ -29,7 +29,7 @@ to_prune = True
 multiply_factor = 3
 #Documents NOTE: EVEN NUMBERS ONLY
 
-amount_of_documents_list = [[2,2],[2,3],[2,4]] 
+amount_of_documents_list = [[4,10],[4,30],[10,30]] 
 #test_train_ratio = 0.3
 #size of most_used
 word_amount = 200
@@ -46,8 +46,8 @@ for amount_of_documents in amount_of_documents_list:
     for x in range(0, 2):
         ssk = get_ssk(to_prune, k, lambda_decay, multiply_factor)
         accuracy, elapsed_time = svm_approx.svm_calc(is_spam, amount_of_documents[0], amount_of_documents[1], ssk, word_amount, k)
-        print ("Amount of Documents: ", amount_of_documents, ", To prune:", to_prune, ", Acc: ", accuracy, ", Elasped time: ", elapsed_time)
-        write_string = str(amount_of_documents) + ' ' + str(accuracy) + ' ' + str(elapsed_time) + '\n'
+        print ("Amount of Test Documents: ", amount_of_documents[0], "Amount of Train Documents: ", amount_of_documents[1], ", To prune:", to_prune, ", Acc: ", accuracy, ", Elasped time: ", elapsed_time)
+        write_string = str(amount_of_documents[0]) + ' ' + str(amount_of_documents[1]) + ' ' + str(accuracy) + ' ' + str(elapsed_time) + '\n'
         
         to_prune = not to_prune
         if(filename == filename_lambda):
