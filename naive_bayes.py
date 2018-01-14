@@ -64,8 +64,8 @@ def get_labels_dictionary():
             all_words += words
 
     dictionary = Counter(all_words)
-    del dictionary['ham']
     del dictionary['spam']
+    del dictionary['ham']
 
     list_to_remove = dictionary.keys()
     for item in list(list_to_remove):
@@ -92,8 +92,6 @@ def extract_features(dictionary, sms_count):
                         features_matrix[docID,wordID] = words.count(word)
             docID = docID + 1
     return features_matrix
-
-
 
 def main():
     # Create a dictionary of words with its frequency
