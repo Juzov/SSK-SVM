@@ -28,7 +28,7 @@ to_prune = True
 #multiply factor for theta/m multiply_factor * k = theta
 multiply_factor = 3
 #Documents NOTE: EVEN NUMBERS ONLY
-amount_of_documents_list = [100,100,100,100] 
+amount_of_documents_list = [2,2,2] 
 #test_train_ratio = 0.3
 #size of most_used
 word_amount = 200
@@ -37,9 +37,8 @@ word_amount = 200
 filename_lambda = timestr + '-lambda-ptest.txt'
 filename_cache = timestr + '-cache-ptest.txt'
 filename = filename_lambda
-data_file_lambda = open(path + '/tests/' + filename, 'w+')
-data_file_cache = open(path + '/tests/' + filename, 'w+')
-data_file = data_file_lambda
+data_file_lambda = open(path + '/tests/' + filename_lambda, 'w+')
+data_file_cache = open(path + '/tests/' + filename_cache, 'w+')
 
 
 for amount_of_documents in amount_of_documents_list:
@@ -48,25 +47,14 @@ for amount_of_documents in amount_of_documents_list:
         accuracy, elapsed_time = svm_approx.svm_calc(is_spam, amount_of_documents, ssk, word_amount, k)
         print ("Amount of Documents: ", amount_of_documents, ", To prune:", to_prune, ", Acc: ", accuracy, ", Elasped time: ", elapsed_time)
         write_string = str(amount_of_documents) + ' ' + str(accuracy) + ' ' + str(elapsed_time) + '\n'
-        data_file.write(write_string)
+        
         to_prune = not to_prune
         if(filename == filename_lambda):
             filename = filename_cache
-            data_file = data_file_cache
+            data_file_lambda.write(write_string)
         else:
             filename = filename_lambda
-            data_file = data_file_lambda
+            data_file_cache.write(write_string)
 
 data_file_lambda.close()
 data_file_cache.close()
-        
-
-
-
-    
-
-
-
-
-
-ssk = None
