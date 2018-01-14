@@ -40,12 +40,12 @@ def inner_loop_cache(j,x,most_used,train_docs, ssk):
 	return [j, x, result]
 
 #where k also advocates the length of most used words e.g only words of size 5
-def svm_calc(is_spam,amount_of_documents, ssk, word_amount, k):
+def svm_calc(is_spam,amount_of_test_documents,amount_of_train_documents, ssk, word_amount, k):
 	#print(most_used)
 	print("Most used done")
 	start = time.time()
 
-	test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam, amount_of_documents)
+	test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam, amount_of_test_documents, amount_of_train_documents)
 	most_used = string_functions.get_most_used(word_amount,k,train_docs)
 
 	gram = np.zeros((len(train_docs),len(train_docs)))

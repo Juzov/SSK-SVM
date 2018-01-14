@@ -28,31 +28,38 @@ to_prune = True
 #multiply factor for theta/m multiply_factor * k = theta
 multiply_factor = 3
 #Documents NOTE: EVEN NUMBERS ONLY
+<<<<<<< HEAD
 amount_of_documents_list = [100] 
+=======
+
+amount_of_documents_list = [[4,10],[4,30],[10,30]] 
+>>>>>>> master
 #test_train_ratio = 0.3
 #size of most_used
 word_amount = 200
 
 
-filename = timestr + '-ptest.txt'
-data_file = open(path + '/tests/' + filename, 'w+')
+filename_lambda = timestr + '-lambda-ptest.txt'
+filename_cache = timestr + '-cache-ptest.txt'
+filename = filename_lambda
+data_file_lambda = open(path + '/tests/' + filename_lambda, 'w+')
+data_file_cache = open(path + '/tests/' + filename_cache, 'w+')
+
+
 for amount_of_documents in amount_of_documents_list:
     for x in range(0, 2):
         ssk = get_ssk(to_prune, k, lambda_decay, multiply_factor)
-        accuracy, elapsed_time = svm_approx.svm_calc(is_spam, amount_of_documents, ssk, word_amount, k)
-        print ("Amount of Documents: ", amount_of_documents, ", To prune:", to_prune, ", Acc: ", accuracy, ", Elasped time: ", elapsed_time)
-        write_string = str(amount_of_documents) + ' ' + str(to_prune) + ' ' + str(accuracy) + ' ' + str(elapsed_time) + '\n'
-        data_file.write(write_string)
-        to_prune = not to_prune
-data_file.close()
+        accuracy, elapsed_time = svm_approx.svm_calc(is_spam, amount_of_documents[0], amount_of_documents[1], ssk, word_amount, k)
+        print ("Amount of Test Documents: ", amount_of_documents[0], "Amount of Train Documents: ", amount_of_documents[1], ", To prune:", to_prune, ", Acc: ", accuracy, ", Elasped time: ", elapsed_time)
+        write_string = str(amount_of_documents[0]) + ' ' + str(amount_of_documents[1]) + ' ' + str(accuracy) + ' ' + str(elapsed_time) + '\n'
         
+        to_prune = not to_prune
+        if(filename == filename_lambda):
+            filename = filename_cache
+            data_file_lambda.write(write_string)
+        else:
+            filename = filename_lambda
+            data_file_cache.write(write_string)
 
-
-
-    
-
-
-
-
-
-ssk = None
+data_file_lambda.close()
+data_file_cache.close()

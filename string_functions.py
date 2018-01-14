@@ -19,7 +19,7 @@ def format_text(text):
 # Get the reuters corpus
 
 
-def get_info(is_spam, amount_of_documents):
+def get_info(is_spam, amount_of_test_documents, amount_of_train_documents):
     test_docs = None
     train_docs = None
     train_labels = None
@@ -29,6 +29,7 @@ def get_info(is_spam, amount_of_documents):
     else:
         test_docs, train_docs, train_labels, test_labels = get_reuters()
     
+<<<<<<< HEAD
     #first_and_last = int(amount_of_documents * 0.5)
 
     # ------ TEST -----
@@ -52,6 +53,19 @@ def get_info(is_spam, amount_of_documents):
     #     first_and_last] + test_labels[- first_and_last:]
     # train_labels = train_labels[: 
     #     first_and_last] + train_labels[- first_and_last:]
+=======
+    first_and_last_test = int(amount_of_test_documents * 0.5)
+    first_and_last_train = int(amount_of_train_documents * 0.5)
+
+    test_docs = test_docs[: first_and_last_test] + \
+        test_docs[- first_and_last_test:]
+    train_docs = train_docs[: first_and_last_train] + \
+        train_docs[- first_and_last_train:]
+    test_labels = test_labels[: 
+        first_and_last_test] + test_labels[- first_and_last_test:]
+    train_labels = train_labels[: 
+        first_and_last_train] + train_labels[- first_and_last_train:]
+>>>>>>> master
 
     return test_docs, train_docs, train_labels, test_labels
 
