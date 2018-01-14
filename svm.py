@@ -73,14 +73,94 @@ def get_spam():
 	return test_data, train_data, train_labels, test_labels
 
 sys.setrecursionlimit(100000)
-k = 10
+k = 1
 
 #test_docs, train_docs, train_labels, test_labels = get_reuters()
 test_docs, train_docs, train_labels, test_labels = get_spam()
-test_docs = test_docs[:5]+test_docs[697:]
-train_docs = train_docs[:5]+train_docs[697:]
-test_labels = test_labels[:5]+test_labels[697:]
-train_labels = train_labels[:5]+train_labels[697:]
+
+print("Length test_doc ", len(test_docs))
+print("Length train_doc ",len(train_docs))
+print("Length test_label ",len(test_labels))
+print("Length train_label ",len(train_labels))
+
+l = 100
+
+#Fixing the wrong positions of files caused by Linux
+index_test_labels = np.argsort(test_labels)
+index_train_labels = np.argsort(train_labels)
+
+print("Index train labels ", train_labels)
+print("Index test labels ", index_train_labels)
+print("Test_labels ", test_labels)
+print("Index test label ",index_test_labels)
+
+new_test_labels = []
+new_test_docs = []
+new_train_labels = []
+new_train_docs = []
+for i in range(len(train_labels)):
+	if (i < len(test_labels)):
+		new_test_labels.append(test_labels[index_test_labels[i]])
+		new_test_docs.append(test_docs[index_test_labels[i]])
+	new_train_labels.append(train_labels[index_train_labels[i]])
+	new_train_docs.append(train_docs[index_train_labels[i]])
+
+train_docs = new_train_docs
+test_docs = new_test_docs
+train_labels = new_train_labels
+test_labels = new_test_labels
+
+print("Train labels ", train_labels)
+print("Test labels ", test_labels)
+
+# print("Index 0 ", test_labels[index_test_labels[0]])
+# print("Index 1 ", test_labels[index_test_labels[1]])
+
+# divider = int(l/2)
+
+# index_test_labels[divider:] = -1
+# index_train_labels[divider:] = -1
+
+# for i in range(l):	 
+# 	j = 0
+# 	while(j < len(train_labels)):
+# 		if i  < l /2:
+# 			if (j < len(test_labels)):
+# 				if test_labels[j] == 0:
+# 					if (j in index_test_labels) == False:
+# 						index_test_labels[i] = j
+# 			if train_labels[j] == 0:
+# 				if (j in index_train_labels) == False:
+# 					index_train_labels[i] = j	
+# 		else:
+# 			if (j < len(test_labels)):
+# 				if test_labels[j] == 1:
+# 					if (j in index_test_labels) == False:
+# 						index_test_labels[i] = j
+# 			if train_labels[j] == 1:
+# 				if (j in index_train_labels) == False:
+# 					index_train_labels[i] = j				
+
+# 		j += 1	
+
+	#print(test_docs[index_test_docs[i]])
+	#print(train_docs[index_train_docs[i]])
+#print("index : ", index_test_labels)
+#print("index : ", index_train_labels)
+	#print(test_labels[index_test_labels[i]])
+	#print(train_labels[index_train_labels[i]])
+
+# test_docs = test_docs[:5]+test_docs[255:]
+# train_docs = train_docs[:5]+train_docs[697:]
+# test_labels = test_labels[:5]+test_labels[255:]
+# train_labels = train_labels[:5]+train_labels[697:]
+
+# print("Length test_doc ",test_docs)
+# print("Length train_doc ",train_docs)
+# print("Length test_label ",test_labels)
+# print("Length train_label ",train_labels)
+
+
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 for i in range(0,len(train_docs)):
@@ -111,6 +191,8 @@ for i in range(0, len(test_docs)):
 for i in range(0,len(test_docs)):
 	for j in range(0, len(test_docs)):
 		test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
+
+print(test_gram)
 
 predicted = model.predict(test_gram)
 
