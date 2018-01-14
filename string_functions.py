@@ -29,16 +29,29 @@ def get_info(is_spam, amount_of_documents):
     else:
         test_docs, train_docs, train_labels, test_labels = get_reuters()
     
-    first_and_last = int(amount_of_documents * 0.5)
+    #first_and_last = int(amount_of_documents * 0.5)
 
-    test_docs = test_docs[: first_and_last] + \
-        test_docs[- first_and_last:]
-    train_docs = train_docs[: first_and_last] + \
-        train_docs[- first_and_last:]
+    # ------ TEST -----
+    first_and_last_Train = int((1*amount_of_documents) * 0.5)
+    first_and_last_Test = int(amount_of_documents * 0.5)
+
+    test_docs = test_docs[: first_and_last_Test] + \
+        test_docs[- first_and_last_Test:]
+    train_docs = train_docs[: first_and_last_Train] + \
+        train_docs[- first_and_last_Train:]
     test_labels = test_labels[: 
-        first_and_last] + test_labels[- first_and_last:]
+        first_and_last_Test] + test_labels[- first_and_last_Test:]
     train_labels = train_labels[: 
-        first_and_last] + train_labels[- first_and_last:]
+        first_and_last_Train] + train_labels[- first_and_last_Train:]
+
+    # test_docs = test_docs[: first_and_last] + \
+    #     test_docs[- first_and_last:]
+    # train_docs = train_docs[: first_and_last] + \
+    #     train_docs[- first_and_last:]
+    # test_labels = test_labels[: 
+    #     first_and_last] + test_labels[- first_and_last:]
+    # train_labels = train_labels[: 
+    #     first_and_last] + train_labels[- first_and_last:]
 
     return test_docs, train_docs, train_labels, test_labels
 

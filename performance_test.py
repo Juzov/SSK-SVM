@@ -19,7 +19,7 @@ def get_ssk(to_prune, k,lambda_decay, multiply_factor):
 #spam or reuters? 
 is_spam = True
 
-k = 5
+k = 3
 lambda_decay = 0.5
 
 ##TRUE: ssk_prune FALSE: ssk_cache
@@ -28,7 +28,7 @@ to_prune = True
 #multiply factor for theta/m multiply_factor * k = theta
 multiply_factor = 3
 #Documents NOTE: EVEN NUMBERS ONLY
-amount_of_documents_list = [2,4,6,10] 
+amount_of_documents_list = [100] 
 #test_train_ratio = 0.3
 #size of most_used
 word_amount = 200

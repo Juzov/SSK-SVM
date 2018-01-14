@@ -19,10 +19,20 @@ def inner_loop(i,j, most_used, train_docs, cacheForSSK, ssk):
 			ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,x)]
 		return ij_instance
 
-def inner_loop_testing(i,j,most_used, test_docs, cacheForSSK, ssk):
+def inner_loop_testing(i,j, most_used, test_docs, cacheForSSK, ssk):
+	ij_instance = 0
+	ii_instance_norm = 0
+	for x in range(0, len(most_used)):
+		temp = ssk.run_instance(test_docs[i],most_used[x][0])
+		ii_instance_norm += temp
+		ij_instance	+= temp*cacheForSSK[(j,x)]
+	return [ij_instance, ii_instance_norm**2]
+
+#----------- TEST ------------
+def inner_loop_testing_norm(i,most_used, test_docs, ssk):
 	ij_instance = 0
 	for x in range(0, len(most_used)):
-		ij_instance	+= ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,x)]
+		ij_instance	+= ssk.run_instance(test_docs[i],most_used[x][0])**2
 	return ij_instance
 
 def inner_loop_cache(j,x,most_used,train_docs, ssk):
@@ -60,10 +70,10 @@ def svm_calc(is_spam,amount_of_documents, ssk, word_amount, k):
 	# Normalize gram matrix
 	unnormalizedTrain = np.zeros(len(train_docs))
 	for i in range(0,len(train_docs)):
-		# if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
-		# 	unnormalizedTrain[i] = 0
-		# else:
-		# 	unnormalizedTrain[i] = gram[i][i]
+		if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
+			unnormalizedTrain[i] = 0
+		else:
+			unnormalizedTrain[i] = gram[i][i]
 		for j in range(0, len(train_docs)):
 			if(math.isnan(gram[i][i]) or math.isnan(gram[j][j]) or gram[i][i] == 0 or gram[j][j] == 0):
 				gram[i][j] = 0
@@ -79,15 +89,21 @@ def svm_calc(is_spam,amount_of_documents, ssk, word_amount, k):
 	# Train SVM
 	model = svm.SVC(kernel='precomputed')
 	model.fit(gram, Y)
+	print("Train docs: ", len(Y))
 	print("Training done")
 
 	# Approximate training gram matrix
 	test_gram = np.zeros((len(test_docs),len(train_docs)))
+	test_gram_norm = np.zeros(len(test_docs))
 
 	test_gram_array = Parallel(n_jobs=-1)(delayed(inner_loop_testing)(i,j,most_used,test_docs,cacheForSSK,ssk) for i in range(0,len(test_docs)) for j in range(0, len(train_docs)))
+	#--------- TEST ------------
+	#test_gram_array_norm = Parallel(n_jobs=-1)(delayed(inner_loop_testing_norm)(i,most_used,test_docs, ssk) for i in range(0,len(test_docs)))
 	for i in range(0,len(test_gram)):
 		for j in range(0, len(test_gram[0])):
-			test_gram[i][j] = test_gram_array.pop(0)
+			temp = test_gram_array.pop(0)
+			test_gram[i][j] = temp[0]
+			test_gram_norm[i] = temp[1]
 
 	# for i in range(0, len(test_docs)):
 	# 	for j in range(0, len(train_docs)):
@@ -101,14 +117,19 @@ def svm_calc(is_spam,amount_of_documents, ssk, word_amount, k):
 	# Normalize training gram matrix
 	for i in range(0,len(test_gram)):
 		for j in range(0, len(test_gram[0])):
-			if(math.isnan(test_gram[i][i]) or test_gram[i][i] == 0 or math.isnan(test_gram[j][j]) or test_gram[j][j] == 0):
+			if(math.isnan(test_gram[i][j]) or test_gram[i][j] == 0 or math.isnan(test_gram[i][j]) or test_gram[i][j] == 0):
 				test_gram[i][j] = 0
 			else:
-				test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
+				# Test normalize.
+				test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram_norm[i]*unnormalizedTrain[j])
+				#--------------------------#
+				#test_gram[i][j] = test_gram[i][j]/math.sqrt(test_gram[i][i]*test_gram[j][j])
 
 	# Test the model
+
 	print("Predicting...")
 	predicted = model.predict(test_gram)
+	print("Pred size:", len(predicted))
 
 	stop = time.time()
 	# Format Y labels
