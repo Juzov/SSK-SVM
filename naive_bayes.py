@@ -93,6 +93,8 @@ def extract_features(dictionary, sms_count):
             docID = docID + 1
     return features_matrix
 
+#Global variable for the length of substrings
+#key = 4
 def main():
     # Create a dictionary of words with its frequency
     train_labels, dictionary = get_labels_dictionary()

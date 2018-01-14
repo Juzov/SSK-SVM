@@ -2,115 +2,91 @@ import sys
 import os
 from sklearn import svm
 import sklearn.preprocessing as preprocessing
-import nltk as nltk
-from nltk.corpus import reuters
-from nltk.corpus import stopwords
 import numpy as np
 import math
 import re
-import sskPruning as ssk
-import substrings
-
-"Function for removing stopwords and symbols"
-def format_text(text):
-	pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*')
-	text.lower()
-	textWihoutStopWords = pattern.sub('', text)
-	textWihoutSymbols = re.sub(r'[^a-zA-Z\d\s]','', textWihoutStopWords)
-	formattedText = re.sub(r"\s+", " ", textWihoutSymbols)
-	return formattedText
-
-"Get the reuters corpus"
-def get_reuters():
-	documents = reuters.fileids()
- 
-	train_docs_id = list(filter(lambda doc: doc.startswith("train"),
-	                            documents))
-	test_docs_id = list(filter(lambda doc: doc.startswith("test"),
-	                       documents))
-
-	train_docs_id = train_docs_id[:2]
-	test_docs_id = test_docs_id[:2]
-
-	train_docs = [reuters.raw(doc_id) for doc_id in train_docs_id]
-	test_docs = [reuters.raw(doc_id) for doc_id in test_docs_id]
-
-	train_docs = [format_text(reuters.raw(doc_id)) for doc_id in train_docs_id]
-	test_docs = [format_text(reuters.raw(doc_id)) for doc_id in test_docs_id]
-
-	train_labels = [reuters.categories(doc_id)
-	                                  for doc_id in train_docs_id]
-	test_labels = [reuters.categories(doc_id)
-	                             for doc_id in test_docs_id]
-
-	return test_docs, train_docs, train_labels, test_labels
-
-"Get spam corpus"
-def get_spam():
-	path = os.path.dirname(os.path.abspath(__file__)) + '/ling-spam/'
-	path_test = path + 'test-mails/'
-	path_train = path + 'train-mails/'
-	test_data = [None]*len(os.listdir(path_test))
-	train_data = [None]*len(os.listdir(path_train))
-	test_labels = [None]*len(os.listdir(path_test))
-	train_labels = [None]*len(os.listdir(path_train))
-
-	for i, filename in enumerate(os.listdir(path_test)):
-		with open(path_test+filename,'r') as email:
-			test_data[i] = format_text(email.read())
-		if("spmsgc" in filename):
-			test_labels[i] = 1
-		else:
-			test_labels[i] = 0
-
-	for i, filename in enumerate(os.listdir(path_train)):
-		with open(path_train+filename,'r') as email:
-			train_data[i] = format_text(email.read())
-		if("spmsgc" in filename):
-			train_labels[i] = 1
-		else:
-			train_labels[i] = 0
-
-	return test_data, train_data, train_labels, test_labels
+#import ssk_prune as ssk
+from ssk_cache import StringSubsequenceKernel
+from ssk_prune import StringSubsequenceKernelWithPrune
+import time
+import string_functions
+from joblib import Parallel, delayed
 
 # SSK needs higher recursion limit, this could be a problem at certain computers
 sys.setrecursionlimit(100000)
-k = 3
-m = 7
 
-# Uncomment/comment this for reuters
-#test_docs, train_docs, train_labels, test_labels = get_reuters()
-# Uncomment/comment this for spam
-test_docs, train_docs, train_labels, test_labels = get_spam()
+to_prune = True
+#spam or reuters?
+is_spam = True
+
+#Setting SSK Parameters
+k = 3
+lambda_decay = 0.5
+m = 7
+ssk = None
+
+if(to_prune):
+	theta = 3*k
+	ssk = StringSubsequenceKernelWithPrune(k,lambda_decay,theta)
+else:
+	ssk = StringSubsequenceKernel(k,lambda_decay)
+
+test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam)
 
 # Only use 20 documents
-test_docs = test_docs[:10]+test_docs[-10:]
-train_docs = train_docs[:10]+train_docs[-10:]
-test_labels = test_labels[:10]+test_labels[-10:]
-train_labels = train_labels[:10]+train_labels[-10:]
+test_docs = test_docs[:20]+test_docs[-20:]
+train_docs = train_docs[:20]+train_docs[-20:]
+test_labels = test_labels[:20]+test_labels[-20:]
+train_labels = train_labels[:20]+train_labels[-20:]
 
 gram = np.zeros((len(train_docs),len(train_docs)))
 
 # Get the most frequent subsequences in the spam corpus
-mostUsed = substrings.getMostUsed()
+most_used = string_functions.get_most_used(is_spam)
+print(most_used)
+print("Most used done")
+start = time.time()
 
 # Approximate gram matrix
 cacheForSSK = {}
+
+def inner_loop(i,j, most_used, train_docs, cacheForSSK):
+	ij_instance = 0
+	for x in range(0, len(most_used)):
+		ij_instance	+= ssk.run_instance(train_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+	return ij_instance
+
+def inner_loop_testing(i,j,most_used, test_docs, cacheForSSK):
+	ij_instance = 0
+	for x in range(0, len(most_used)):
+		ij_instance	+= ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+	return ij_instance
+
+def inner_loop_cache(j,x,most_used,train_docs):
+	result = ssk.run_instance(train_docs[j],most_used[x][0])
+	return [j, most_used[x][0], result]
+
+cache_array = Parallel(n_jobs=-1)(delayed(inner_loop_cache)(i,x,most_used,train_docs) for i in range(0,len(train_docs)) for x in range(0, len(most_used)))
+
+for i in range(0,len(cache_array)):
+	cacheForSSK[(cache_array[i][0],cache_array[i][1])] = cache_array[i][2]
+
+gram_array = Parallel(n_jobs=-1)(delayed(inner_loop)(i,j,most_used,train_docs,cacheForSSK) for i in range(0,len(train_docs)) for j in range(i, len(train_docs)))
+
 for i in range(0,len(train_docs)):
 	for j in range(i, len(train_docs)):
-		for x in range(0, len(mostUsed)):
-			cacheForSSK[(j,mostUsed[x][0])] = ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
-			gram[i][j] += ssk.getSSK(train_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
-			gram[j][i] += gram[i][j]
-	print("Document", i+1,"/",len(train_docs),"done")
+		gram[i][j] = gram_array.pop(0)
+		gram[j][i] = gram[i][j]
 
 # Normalize gram matrix
 for i in range(0,len(train_docs)):
 	for j in range(0, len(train_docs)):
 		gram[i][j] = gram[i][j]/math.sqrt(gram[i][i]*gram[j][j])
 
+print(gram)
+
 # Format the training labels
-Y = np.array(train_labels)
+Y = np.array(train_labels).reshape(-1)
 le = preprocessing.LabelEncoder()
 le.fit(Y)
 Y = le.transform(Y)
@@ -122,14 +98,20 @@ print("Training done")
 
 # Approximate training gram matrix
 test_gram = np.zeros((len(test_docs),len(train_docs)))
-for i in range(0, len(test_docs)):
+
+test_gram_array = Parallel(n_jobs=-1)(delayed(inner_loop_testing)(i,j,most_used,test_docs,cacheForSSK) for i in range(0,len(test_docs)) for j in range(0, len(train_docs)))
+for i in range(0,len(train_docs)):
 	for j in range(0, len(train_docs)):
-		for x in range(0, len(mostUsed)):
-			if ((j,mostUsed[x][0]) in cacheForSSK):
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*cacheForSSK[(j,mostUsed[x][0])]
-			else:
-				test_gram[i][j] = ssk.getSSK(test_docs[i],mostUsed[x][0], k, m)*ssk.getSSK(train_docs[j],mostUsed[x][0], k, m)
-	print("Test document", i+1,"/",len(test_docs),"done")
+		test_gram[i][j] = test_gram_array.pop(0)
+
+# for i in range(0, len(test_docs)):
+# 	for j in range(0, len(train_docs)):
+# 		for x in range(0, len(most_used)):
+# 			if ((j,most_used[x][0]) in cacheForSSK):
+# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*cacheForSSK[(j,most_used[x][0])]
+# 			else:
+# 				test_gram[i][j] += ssk.run_instance(test_docs[i],most_used[x][0])*ssk.run_instance(train_docs[j],most_used[x][0])
+# 	print("Test document", i+1,"/",len(test_docs),"done")
 
 # Normalize training gram matrix
 for i in range(0,len(test_gram)):
@@ -140,12 +122,15 @@ for i in range(0,len(test_gram)):
 print("Predicting...")
 predicted = model.predict(test_gram)
 
+stop = time.time()
 # Format Y labels
-Y = np.array(test_labels)
+Y = np.array(test_labels).reshape(-1)
 le = preprocessing.LabelEncoder()
 le.fit(Y)
 Y = le.transform(Y)
 
+
+print("Time:", stop-start)
 # Calculate error rate
 countNumberOfRights = 0
 print(predicted)
