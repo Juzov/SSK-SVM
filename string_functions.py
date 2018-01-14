@@ -28,8 +28,7 @@ def get_info(is_spam, amount_of_test_documents, amount_of_train_documents):
         test_docs, train_docs, train_labels, test_labels = get_spam()
     else:
         test_docs, train_docs, train_labels, test_labels = get_reuters()
-    
-<<<<<<< HEAD
+
     #first_and_last = int(amount_of_documents * 0.5)
 
     # ------ TEST -----
@@ -53,7 +52,7 @@ def get_info(is_spam, amount_of_test_documents, amount_of_train_documents):
     #     first_and_last] + test_labels[- first_and_last:]
     # train_labels = train_labels[: 
     #     first_and_last] + train_labels[- first_and_last:]
-=======
+
     first_and_last_test = int(amount_of_test_documents * 0.5)
     first_and_last_train = int(amount_of_train_documents * 0.5)
 
@@ -65,7 +64,6 @@ def get_info(is_spam, amount_of_test_documents, amount_of_train_documents):
         first_and_last_test] + test_labels[- first_and_last_test:]
     train_labels = train_labels[: 
         first_and_last_train] + train_labels[- first_and_last_train:]
->>>>>>> master
 
     return test_docs, train_docs, train_labels, test_labels
 
