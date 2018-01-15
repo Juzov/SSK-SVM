@@ -46,7 +46,7 @@ def svm_calc(is_spam,amount_of_test_documents,amount_of_train_documents, ssk, wo
 	start = time.time()
 
 	test_docs, train_docs, train_labels, test_labels = string_functions.get_info(is_spam, amount_of_test_documents, amount_of_train_documents)
-	most_used = string_functions.get_most_used(word_amount,k,train_docs)
+	most_used = string_functions.get_most_used(word_amount,k)
 
 	gram = np.zeros((len(train_docs),len(train_docs)))
 

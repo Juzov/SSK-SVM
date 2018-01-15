@@ -109,9 +109,11 @@ def get_spam():
     return test_data, train_data, train_labels, test_labels
 
 
-def get_most_used(word_amount, k, train_docs):
+def get_most_used(word_amount, k):
     d = {}
     string_length = k
+
+    test_data, train_docs, train_labels, test_labels = get_spam()
 
     for i, text in enumerate(train_docs):
         for j in range(0, len(text) - string_length):
